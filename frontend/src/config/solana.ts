@@ -1,7 +1,12 @@
 // src/config/solana.ts
 import { Connection } from "@solana/web3.js";
 
-const RPC = "https://api.devnet.solana.com";
+export const RPC =
+  (import.meta.env.VITE_RPC as string) || "https://api.devnet.solana.com";
+
+export const CLUSTER =
+  (import.meta.env.VITE_CLUSTER as "mainnet-beta" | "devnet" | "testnet") ||
+  "devnet";
 
 export async function createConnection() {
   const c = new Connection(RPC, "confirmed");

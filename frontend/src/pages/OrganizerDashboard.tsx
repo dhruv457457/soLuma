@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useSolanaWallet } from "@web3auth/modal/react/solana";
-import { ensureFirebaseAuth } from "../lib/firebase";
+import { ensureFirebaseAuth } from "../config/firebase";
 import { listPactsByCreator } from "../lib/pacts";
 import { Link } from "react-router-dom";
 

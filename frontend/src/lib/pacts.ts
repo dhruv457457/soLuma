@@ -9,7 +9,7 @@ import {
     setDoc,
   } from "firebase/firestore";
   import { getDocs, where, query, orderBy } from "firebase/firestore";
-  import { db } from "./firebase";
+  import { db } from "../config/firebase";
   import { buildSolanaPayURL } from "./solanapay";
   import { Keypair } from "@solana/web3.js";
   

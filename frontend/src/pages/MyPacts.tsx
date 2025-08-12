@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useSolanaWallet } from "@web3auth/modal/react/solana";
-import { ensureFirebaseAuth } from "../lib/firebase";
+import { ensureFirebaseAuth } from "../config/firebase";
 import {
   listPactsForWallet,
   findParticipantIndexByWallet,

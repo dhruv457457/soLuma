@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import { useSolanaWallet } from "@web3auth/modal/react/solana";
 import { useWeb3Auth } from "@web3auth/modal/react";
 
-import { ensureFirebaseAuth } from "../lib/firebase";
+import { ensureFirebaseAuth } from "../config/firebase";
 import { listenPact, markParticipantPaid } from "../lib/pacts";
 import { makePayURL, makeCompatURL } from "../lib/solanapay";
 import { createConnection } from "../config/solana";

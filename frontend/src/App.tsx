@@ -1,33 +1,34 @@
-// src/App.tsx
-import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-
-import WalletBar from "./components/WalletBar";
+import { Routes, Route } from "react-router-dom";
 import NavBar from "./components/NavBar";
+import WalletBar from "./components/WalletBar";
 import Home from "./pages/Home";
-import CreatePact from "./pages/CreatePact";
+import EventsList from "./pages/EventsList";
+import EventDetails from "./pages/EventDetails";
+import EventCheckout from "./pages/EventCheckout";
+import MyTickets from "./pages/MyTickets";
+import TicketView from "./pages/TicketView";
+import Scanner from "./pages/Scanner";
+import CreateEvent from "./pages/CreateEvent";
+import OrgEventDashboard from "./pages/OrgEventDashboard";
 import NotFound from "./pages/NotFound";
-import PactDetails from "./pages/PactDetails";
-import OrganizerDashboard from "./pages/OrganizerDashboard";
-import ParticipantPay from "./pages/ParticipantPay";
-import MyPacts from "./pages/MyPacts";
-const App: React.FC = () => {
+
+export default function App() {
   return (
-    <Router>
-      <WalletBar /> {/* Global wallet connect bar, always visible */}
+    <>
+      <WalletBar />
       <NavBar />
       <Routes>
-  <Route path="/" element={<Home />} />
-  <Route path="/create" element={<CreatePact />} />
-  <Route path="/pact/:id" element={<PactDetails />} />
-  <Route path="/organizer" element={<OrganizerDashboard />} />
-  <Route path="*" element={<NotFound />} />
-  <Route path="/pay/:pactId/:index" element={<ParticipantPay />} />  {/* NEW */}
-  <Route path="/my" element={<MyPacts />} />  {/* NEW */}
-</Routes>
-
-    </Router>
+        <Route path="/" element={<Home />} />
+        <Route path="/events" element={<EventsList />} />
+        <Route path="/e/:id" element={<EventDetails />} />
+        <Route path="/checkout/:eventId" element={<EventCheckout />} />
+        <Route path="/tickets" element={<MyTickets />} />
+        <Route path="/tickets/:ticketId" element={<TicketView />} />
+        <Route path="/scan" element={<Scanner />} />
+        <Route path="/org/events" element={<CreateEvent />} />
+        <Route path="/org/events/:id" element={<OrgEventDashboard />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </>
   );
-};
-
-export default App;
+}
