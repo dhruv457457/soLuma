@@ -4,8 +4,9 @@ import { useSolanaWallet } from "@web3auth/modal/react/solana";
 import { getMyTickets } from "../lib/tickets";
 import { getEvent } from "../lib/events";
 import { ensureFirebaseAuth } from "../config/firebase";
+import type { EventDoc, TicketDoc } from "../types/ticketing";
 
-function TicketRow({ ticket, event }) {
+function TicketRow({ ticket, event }: { ticket: TicketDoc; event: EventDoc | null }) {
   if (!event) return null;
   return (
     <Link to={`/tickets/${ticket.id}`} className="block border rounded-lg p-4 hover:bg-gray-50">
@@ -18,13 +19,13 @@ function TicketRow({ ticket, event }) {
 }
 
 export default function MyTickets() {
-  const { accounts, isConnected } = useSolanaWallet();
+  const { accounts } = useSolanaWallet();
   const wallet = accounts?.[0] || "";
 
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [tickets, setTickets] = useState([]);
-  const [error, setError] = useState(null);
+  const [tickets, setTickets] = useState<(TicketDoc & { event: EventDoc | null })[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   // Step 1: Wait for Firebase auth to be ready
   useEffect(() => {
@@ -90,7 +91,9 @@ export default function MyTickets() {
         <div className="text-gray-600">You don't have any tickets yet.</div>
       ) : (
         <div className="space-y-3">
-          {tickets.map((t) => <TicketRow key={t.id} ticket={t} event={t.event} />)}
+          {tickets.map((t) => (
+            <TicketRow key={t.id} ticket={t} event={t.event} />
+          ))}
         </div>
       )}
     </div>

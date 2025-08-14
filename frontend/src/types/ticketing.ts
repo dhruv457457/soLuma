@@ -5,6 +5,7 @@ export interface EventDoc {
   title: string;
   slug: string;
   bannerUrl?: string;
+  description?: string;
   startsAt: string;
   endsAt?: string;
   venue?: string;

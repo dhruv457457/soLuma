@@ -1,10 +1,11 @@
 // src/lib/orders.ts
 import { CLUSTER } from "../config/solana";
+import type { OrderDoc } from "../types/ticketing";
 
 /**
  * Calls the backend API to create a new order and returns the orderId.
  */
-export async function createOrder(payload) {
+export async function createOrder(payload: Omit<OrderDoc, 'id' | 'status' | 'createdAt' | 'txSig'>) {
   const response = await fetch("http://localhost:3001/api/orders.create", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
