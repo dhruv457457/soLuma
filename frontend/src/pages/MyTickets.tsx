@@ -1,9 +1,98 @@
-import React from 'react'
+import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { useSolanaWallet } from "@web3auth/modal/react/solana";
+import { getMyTickets } from "../lib/tickets";
+import { getEvent } from "../lib/events";
+import { ensureFirebaseAuth } from "../config/firebase";
 
-function MyTickets() {
+function TicketRow({ ticket, event }) {
+  if (!event) return null;
   return (
-    <div>MyTickets</div>
-  )
+    <Link to={`/tickets/${ticket.id}`} className="block border rounded-lg p-4 hover:bg-gray-50">
+      <div className="text-lg font-semibold">{event.title}</div>
+      <div className="text-sm text-gray-600">
+        Ticket ID: {ticket.id} • Status: {ticket.status}
+      </div>
+    </Link>
+  );
 }
 
-export default MyTickets
+export default function MyTickets() {
+  const { accounts, isConnected } = useSolanaWallet();
+  const wallet = accounts?.[0] || "";
+
+  const [isAuthReady, setIsAuthReady] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [tickets, setTickets] = useState([]);
+  const [error, setError] = useState(null);
+
+  // Step 1: Wait for Firebase auth to be ready
+  useEffect(() => {
+    (async () => {
+      try {
+        await ensureFirebaseAuth();
+        setIsAuthReady(true);
+      } catch (e: any) {
+        setError(e.message || "Auth failed.");
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  // Step 2: Load tickets once auth is ready and wallet is connected
+  useEffect(() => {
+    // Only proceed if auth is ready and a wallet is connected
+    if (!isAuthReady) {
+      return;
+    }
+
+    if (!wallet) {
+      setLoading(false);
+      setError("Please connect your wallet to view tickets.");
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    const fetchTickets = async () => {
+      try {
+        const fetchedTickets = await getMyTickets(wallet);
+        
+        // Fetch event details for each ticket, as the backend is not doing it
+        const ticketsWithEvents = await Promise.all(
+          fetchedTickets.map(async (t) => {
+            const eventData = await getEvent(t.eventId);
+            return { ...t, event: eventData };
+          })
+        );
+        setTickets(ticketsWithEvents);
+      } catch (e: any) {
+        setError(e.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchTickets();
+  }, [isAuthReady, wallet]);
+
+  if (!isAuthReady) {
+    return <div className="p-6">Initializing authentication...</div>;
+  }
+
+  if (loading) return <div className="p-6">Loading tickets...</div>;
+  if (error) return <div className="p-6 text-red-600">Error: {error}</div>;
+
+  return (
+    <div className="max-w-3xl mx-auto p-6">
+      <h2 className="text-2xl font-semibold text-blue-700 mb-4">My Tickets</h2>
+      {tickets.length === 0 ? (
+        <div className="text-gray-600">You don't have any tickets yet.</div>
+      ) : (
+        <div className="space-y-3">
+          {tickets.map((t) => <TicketRow key={t.id} ticket={t} event={t.event} />)}
+        </div>
+      )}
+    </div>
+  );
+}

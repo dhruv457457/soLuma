@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
-import { listPublishedEvents } from "../lib/events";
+import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
+import { listPublishedEvents } from "../lib/events";
 
 function EventRow({ ev }: { ev: any }) {
   return (
@@ -15,23 +15,23 @@ function EventRow({ ev }: { ev: any }) {
 }
 
 export default function EventsList() {
-  const [events, setEvents] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  // useQuery will automatically manage fetching, caching, and background refetching
+  const { data: events, isLoading, isError } = useQuery({
+    queryKey: ["events", "published"],
+    queryFn: listPublishedEvents,
+  });
 
-  useEffect(() => {
-    listPublishedEvents().then(setEvents).finally(() => setLoading(false));
-  }, []);
+  if (isLoading) return <div className="p-6">Loading events...</div>;
+  if (isError) return <div className="p-6 text-red-600">Failed to load events.</div>;
 
   return (
     <div className="max-w-3xl mx-auto p-6">
       <h2 className="text-2xl font-semibold text-blue-700 mb-4">Upcoming Events</h2>
-      {loading ? (
-        <div>Loading…</div>
-      ) : events.length === 0 ? (
+      {events?.length === 0 ? (
         <div className="text-gray-600">No events yet. Create one!</div>
       ) : (
         <div className="space-y-3">
-          {events.map((ev) => <EventRow key={ev.id} ev={ev} />)}
+          {events?.map((ev) => <EventRow key={ev.id} ev={ev} />)}
         </div>
       )}
     </div>

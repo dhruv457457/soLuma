@@ -1,12 +1,13 @@
 // src/pages/EventCheckout.tsx
 import { useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { Keypair } from "@solana/web3.js";
 import { useSolanaWallet } from "@web3auth/modal/react/solana";
 import { useWeb3Auth } from "@web3auth/modal/react";
 
 import { ensureFirebaseAuth } from "../config/firebase";
 import { getEvent } from "../lib/events";
+import { createOrder, verifyOrderAndGetTickets } from "../lib/orders";
 import { makePayURL, makeCompatURL } from "../lib/solanapay";
 import { createConnection, CLUSTER } from "../config/solana";
 import { payWithConnectedWalletSDK } from "../lib/pay-desktop";
@@ -25,6 +26,7 @@ type EventDoc = {
 
 export default function EventCheckout() {
   const { eventId } = useParams<{ eventId: string }>();
+  const navigate = useNavigate();
 
   const { accounts } = useSolanaWallet();
   const { provider } = useWeb3Auth();
@@ -36,21 +38,7 @@ export default function EventCheckout() {
   const [err, setErr] = useState<string | null>(null);
   const [txSig, setTxSig] = useState<string | null>(null);
   const [paying, setPaying] = useState(false);
-
-  useEffect(() => {
-    ensureFirebaseAuth();
-    if (!eventId) return;
-    (async () => {
-      try {
-        const doc = await getEvent(eventId);
-        setEv(doc as any);
-      } catch (e: any) {
-        setErr(e?.message || "Failed to load event");
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, [eventId]);
+  const [orderId, setOrderId] = useState<string | null>(null);
 
   // one-time unique reference for this checkout session
   const reference = useMemo(() => Keypair.generate().publicKey.toBase58(), []);
@@ -62,6 +50,42 @@ export default function EventCheckout() {
     const per = ev.priceLamports / 1e9;
     return Number((per * qty).toFixed(9));
   }, [ev, qty]);
+
+  // This useEffect hook initializes the checkout session.
+  // It fetches the event details and creates a new pending order on the backend.
+  useEffect(() => {
+    ensureFirebaseAuth();
+    if (!eventId || !accounts?.[0]) return;
+    
+    // Prevent re-creating the order if it already exists for this session
+    if (orderId) return;
+
+    (async () => {
+      setLoading(true);
+      try {
+        const eventDoc = await getEvent(eventId);
+        if (!eventDoc) throw new Error("Event not found.");
+        setEv(eventDoc as EventDoc);
+
+        // Call the backend API to create a new order
+        const orderPayload = {
+          eventId,
+          buyerWallet: accounts[0],
+          qty: 1, // Default to 1, can be updated by user input
+          amountLamports: eventDoc.priceLamports,
+          currency: eventDoc.currency,
+          receiverWallet: eventDoc.receiverWallet,
+          reference, // Your unique payment reference
+        };
+        const newOrderId = await createOrder(orderPayload);
+        setOrderId(newOrderId);
+      } catch (e: any) {
+        setErr(e?.message || "Failed to initialize checkout.");
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [eventId, accounts, reference, orderId]);
 
   // Build Solana Pay URLs (nullable until event is ready)
   const payUrl = useMemo<null | { strict: string; compat: string; total: number }>(() => {
@@ -97,6 +121,7 @@ export default function EventCheckout() {
       if (!connected) throw new Error("Connect your wallet first");
       if (!provider || typeof (provider as any).request !== "function")
         throw new Error("Embedded wallet provider not ready");
+      if (!orderId) throw new Error("Order not created.");
 
       setPaying(true);
       const conn = await createConnection();
@@ -109,6 +134,18 @@ export default function EventCheckout() {
         reference, // attach reference readonly key
       });
       setTxSig(sig);
+
+      // After a successful transaction, verify the order and get tickets
+      const ticketIds = await verifyOrderAndGetTickets({
+        orderId,
+        txSig: sig,
+        reference,
+        buyerWallet: accounts[0],
+      });
+      
+      // Redirect to the first ticket's page for confirmation
+      navigate(`/tickets/${ticketIds[0]}`);
+
     } catch (e: any) {
       alert(e?.message || "Payment failed");
     } finally {
@@ -122,8 +159,8 @@ export default function EventCheckout() {
 
   const priceDisplay =
     ev.currency === "SOL"
-      ? `${(ev.priceLamports / 1e9).toFixed(4)} SOL`
-      : `${(ev.priceLamports / 1e6).toFixed(2)} USDC`;
+      ? `${(ev.priceLamports / 1e9 * qty).toFixed(4)} SOL`
+      : `${(ev.priceLamports / 1e6 * qty).toFixed(2)} USDC`;
 
   return (
     <div className="max-w-5xl mx-auto p-6">
@@ -193,14 +230,6 @@ export default function EventCheckout() {
                     >
                       Copy URL
                     </button>
-                    <a
-                      href={isNonMainnet ? payUrl.strict : payUrl.compat}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-blue-600 underline"
-                    >
-                      {isNonMainnet ? "Open (strict)" : "Open (compat)"}
-                    </a>
                   </>
                 ) : (
                   <span className="text-gray-500">Preparing URL…</span>

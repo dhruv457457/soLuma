@@ -1,5 +1,4 @@
-// src/pages/EventDetails.tsx
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useParams, useNavigate } from "react-router-dom";
 import { ensureFirebaseAuth } from "../config/firebase";
 import { getEvent } from "../lib/events";
@@ -7,27 +6,16 @@ import { getEvent } from "../lib/events";
 export default function EventDetails() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [ev, setEv] = useState<any | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [err, setErr] = useState<string | null>(null);
 
-  useEffect(() => {
-    ensureFirebaseAuth();
-    if (!id) return;
-    (async () => {
-      try {
-        const doc = await getEvent(id);
-        setEv(doc);
-      } catch (e: any) {
-        setErr(e?.message || "Failed to load event");
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, [id]);
+  // Use useQuery to fetch the event details
+  const { data: ev, isLoading, isError } = useQuery({
+    queryKey: ["event", id],
+    queryFn: () => getEvent(id!),
+    enabled: !!id, // Only run the query if `id` is available
+  });
 
-  if (loading) return <div className="p-6">Loading…</div>;
-  if (err) return <div className="p-6 text-red-600">{err}</div>;
+  if (isLoading) return <div className="p-6">Loading…</div>;
+  if (isError) return <div className="p-6 text-red-600">Failed to load event.</div>;
   if (!ev) return <div className="p-6">Event not found.</div>;
 
   const price =

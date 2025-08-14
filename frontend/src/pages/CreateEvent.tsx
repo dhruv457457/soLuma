@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ensureFirebaseAuth, auth } from "../config/firebase";
 import { createEvent } from "../lib/events";
 import { useSolanaWallet } from "@web3auth/modal/react/solana";
@@ -25,10 +26,24 @@ export default function CreateEvent() {
   const [price, setPrice] = useState<string>("");
   const [capacity, setCapacity] = useState<string>("100");
   const [receiverWallet, setReceiverWallet] = useState<string>(accounts?.[0] || "");
-  const [submitting, setSubmitting] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  // Use useMutation to handle the event creation logic
+  const createEventMutation = useMutation({
+    mutationFn: createEvent,
+    onSuccess: (id) => {
+      // Invalidate the 'events' query to force a refetch of the list
+      queryClient.invalidateQueries({ queryKey: ["events", "published"] });
+      // Navigate to the new event's page
+      navigate(`/e/${id}`);
+    },
+    onError: (e: any) => {
+      setErr(e?.message || "Failed to create event.");
+    },
+  });
 
   useEffect(() => {
     ensureFirebaseAuth();
@@ -41,6 +56,7 @@ export default function CreateEvent() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setErr(null);
+
     if (!title || !startsAt || !price || !receiverWallet) {
       setErr("Please fill all required fields.");
       return;
@@ -57,31 +73,27 @@ export default function CreateEvent() {
       return;
     }
 
-    setSubmitting(true);
-    try {
-      const id = await createEvent({
-        title,
-        slug: slugify(title),
-        description,
-        venue,
-        startsAt: new Date(startsAt).toISOString(),
-        endsAt: endsAt ? new Date(endsAt).toISOString() : null,
-        currency,
-        priceLamports: toLamports(priceNum, currency),
-        receiverWallet: receiverWallet.trim(),
-        capacity: capNum,
-        salesCount: 0,
-        createdBy: uid,
-        status: "published", // simple for MVP
-        bannerUrl: "",
-      });
-      navigate(`/e/${id}`);
-    } catch (e: any) {
-      setErr(e?.message || "Failed to create event.");
-    } finally {
-      setSubmitting(false);
-    }
+    const newEvent = {
+      title,
+      slug: slugify(title),
+      description,
+      venue,
+      startsAt: new Date(startsAt).toISOString(),
+      endsAt: endsAt ? new Date(endsAt).toISOString() : null,
+      currency,
+      priceLamports: toLamports(priceNum, currency),
+      receiverWallet: receiverWallet.trim(),
+      capacity: capNum,
+      salesCount: 0,
+      createdBy: uid,
+      status: "published", // simple for MVP
+      bannerUrl: "",
+    };
+
+    createEventMutation.mutate(newEvent);
   }
+
+  const submitting = createEventMutation.isPending;
 
   return (
     <div className="max-w-2xl mx-auto p-6 mt-8 bg-white rounded-xl shadow">

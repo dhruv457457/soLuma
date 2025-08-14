@@ -1,9 +1,63 @@
-import React from 'react'
+import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import QRCode from "react-qr-code";
+import { getTicket } from "../lib/tickets";
+import { getEvent } from "../lib/events";
 
-function TicketView() {
+export default function TicketView() {
+  const { ticketId } = useParams();
+  const [ticket, setTicket] = useState(null);
+  const [event, setEvent] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [qrValue, setQrValue] = useState("");
+
+  useEffect(() => {
+    if (!ticketId) return;
+
+    const fetchTicketData = async () => {
+      try {
+        const ticketDoc = await getTicket(ticketId);
+        const eventDoc = await getEvent(ticketDoc.eventId);
+        setTicket(ticketDoc);
+        setEvent(eventDoc);
+      } catch (e) {
+        setError(e.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchTicketData();
+  }, [ticketId]);
+
+  useEffect(() => {
+    if (!ticket) return;
+
+    const generateNonce = () => {
+      const nonce = Math.random().toString(36).substring(2, 10);
+      setQrValue(`${window.location.origin}/scan?ticketId=${ticket.id}&nonce=${nonce}`);
+    };
+
+    generateNonce();
+    const interval = setInterval(generateNonce, 15000);
+
+    return () => clearInterval(interval);
+  }, [ticket]);
+
+  if (loading) return <div className="p-6">Loading ticket...</div>;
+  if (error) return <div className="p-6 text-red-600">Error: {error}</div>;
+  if (!ticket || !event) return <div className="p-6">Ticket not found.</div>;
+
   return (
-    <div>TicketView</div>
-  )
+    <div className="max-w-md mx-auto p-6 text-center border rounded-xl shadow-lg mt-8">
+      <h2 className="text-2xl font-semibold text-blue-700">{event.title}</h2>
+      <p className="text-sm text-gray-600 mb-4">Ticket ID: {ticket.id}</p>
+      <div className="bg-white p-4 inline-block">
+        <QRCode value={qrValue} size={256} />
+      </div>
+      <p className="mt-4 text-sm text-gray-500">
+        This QR code refreshes every 15 seconds to prevent screenshots.
+      </p>
+    </div>
+  );
 }
-
-export default TicketView
