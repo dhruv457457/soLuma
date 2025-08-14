@@ -12,7 +12,17 @@ import { makePayURL, makeCompatURL } from "../lib/solanapay";
 import { createConnection, CLUSTER } from "../config/solana";
 import { payWithConnectedWalletSDK } from "../lib/pay-desktop";
 import PaymentQR from "../components/PaymentQR";
-import type { EventDoc } from "../types/ticketing";
+
+type EventDoc = {
+  id: string;
+  title: string;
+  description?: string;
+  venue?: string;
+  startsAt: string;
+  currency: "SOL" | "USDC";
+  priceLamports: number;
+  receiverWallet: string;
+};
 
 export default function EventCheckout() {
   const { eventId } = useParams<{ eventId: string }>();

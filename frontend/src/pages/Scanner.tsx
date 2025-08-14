@@ -9,7 +9,7 @@ export default function Scanner() {
   const [scanMessage, setScanMessage] = useState("Ready to scan...");
 
   useEffect(() => {
-    let scanner: QrScanner;
+    let scanner;
     if (videoRef.current) {
       scanner = new QrScanner(
         videoRef.current,
@@ -33,7 +33,7 @@ export default function Scanner() {
     };
   }, []);
 
-  const handleScan = async (qrData: string) => {
+  const handleScan = async (qrData) => {
     setStatus("validating");
     setScanMessage("Validating ticket...");
 
@@ -55,11 +55,7 @@ export default function Scanner() {
       }
     } catch (error) {
       setStatus("failed");
-      if (error instanceof Error) {
-        setScanMessage(`Error: ${error.message}`);
-      } else {
-        setScanMessage("An unknown error occurred.");
-      }
+      setScanMessage(`Error: ${error.message}`);
       setTimeout(() => {
         setStatus("scanning");
         setScanMessage("Ready to scan...");

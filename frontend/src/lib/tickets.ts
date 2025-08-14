@@ -1,11 +1,10 @@
 // src/lib/tickets.ts
 import { getEvent } from "../lib/events";
-import type { TicketDoc } from "../types/ticketing";
 
 /**
  * Calls the backend API to fetch all tickets for a given wallet address.
  */
-export async function getMyTickets(ownerWallet: string): Promise<TicketDoc[]> {
+export async function getMyTickets(ownerWallet) {
   if (!ownerWallet) {
     throw new Error("Wallet address is required to fetch tickets.");
   }
@@ -28,7 +27,7 @@ export async function getMyTickets(ownerWallet: string): Promise<TicketDoc[]> {
 /**
  * Calls the backend API to fetch a single ticket.
  */
-export async function getTicket(ticketId: string): Promise<TicketDoc> {
+export async function getTicket(ticketId) {
   const response = await fetch("http://localhost:3001/api/tickets.get", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -47,7 +46,7 @@ export async function getTicket(ticketId: string): Promise<TicketDoc> {
 /**
  * Calls the backend API to redeem a ticket.
  */
-export async function redeemTicket(ticketId: string, nonce: string): Promise<any> {
+export async function redeemTicket(ticketId, nonce) {
   const response = await fetch("http://localhost:3001/api/tickets.redeem", {
     method: "POST",
     headers: { "Content-Type": "application/json" },

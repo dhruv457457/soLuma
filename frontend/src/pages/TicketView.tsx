@@ -3,14 +3,13 @@ import { useParams } from "react-router-dom";
 import QRCode from "react-qr-code";
 import { getTicket } from "../lib/tickets";
 import { getEvent } from "../lib/events";
-import type { EventDoc, TicketDoc } from "../types/ticketing";
 
 export default function TicketView() {
   const { ticketId } = useParams();
-  const [ticket, setTicket] = useState<TicketDoc | null>(null);
-  const [event, setEvent] = useState<EventDoc | null>(null);
+  const [ticket, setTicket] = useState(null);
+  const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState(null);
   const [qrValue, setQrValue] = useState("");
 
   useEffect(() => {
@@ -23,11 +22,7 @@ export default function TicketView() {
         setTicket(ticketDoc);
         setEvent(eventDoc);
       } catch (e) {
-        if (e instanceof Error) {
-          setError(e.message);
-        } else {
-          setError("An unexpected error occurred");
-        }
+        setError(e.message);
       } finally {
         setLoading(false);
       }
