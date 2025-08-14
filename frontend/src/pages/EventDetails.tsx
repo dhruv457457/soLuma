@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useParams, useNavigate } from "react-router-dom";
 import { ensureFirebaseAuth } from "../config/firebase";
 import { getEvent } from "../lib/events";
+import type { EventDoc } from "../types/ticketing";
 
 export default function EventDetails() {
   const { id } = useParams<{ id: string }>();

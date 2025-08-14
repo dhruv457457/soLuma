@@ -1,18 +1,19 @@
 import { db } from "../config/firebase";
 import { addDoc, collection, doc, getDoc, getDocs, orderBy, query, where } from "firebase/firestore";
+import type { EventDoc } from "../types/ticketing";
 
 export async function createEvent(payload: any): Promise<string> {
   const ref = await addDoc(collection(db, "events"), payload);
   return ref.id;
 }
 
-export async function getEvent(eventId: string) {
+export async function getEvent(eventId: string): Promise<EventDoc | null> {
   const snap = await getDoc(doc(db, "events", eventId));
-  return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+  return snap.exists() ? { id: snap.id, ...snap.data() } as EventDoc : null;
 }
 
-export async function listPublishedEvents() {
+export async function listPublishedEvents(): Promise<EventDoc[]> {
   const q = query(collection(db, "events"), where("status", "==", "published"), orderBy("startsAt", "asc"));
   const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() })) as any[];
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() })) as EventDoc[];
 }
