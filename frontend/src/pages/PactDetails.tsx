@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import * as React from "react";
 import { useParams } from "react-router-dom";
 import { useSolanaWallet } from "@web3auth/modal/react/solana";
 import { useWeb3Auth } from "@web3auth/modal/react";

@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import * as React from "react";
 import { useSolanaWallet } from "@web3auth/modal/react/solana";
 import { ensureFirebaseAuth } from "../config/firebase";
 import { listPactsByCreator } from "../lib/pacts";

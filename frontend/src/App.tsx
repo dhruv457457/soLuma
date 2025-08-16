@@ -1,6 +1,6 @@
 import { Routes, Route } from "react-router-dom";
-import NavBar from "./components/NavBar";
-import WalletBar from "./components/WalletBar";
+// import NavBar from "./components/NavBar";
+import NavBar from "./layout/Navbar";
 import Home from "./pages/Home";
 import EventsList from "./pages/EventsList";
 import EventDetails from "./pages/EventDetails";
@@ -15,7 +15,6 @@ import NotFound from "./pages/NotFound";
 export default function App() {
   return (
     <>
-      <WalletBar />
       <NavBar />
       <Routes>
         <Route path="/" element={<Home />} />
