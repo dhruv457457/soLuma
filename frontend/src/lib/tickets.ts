@@ -47,18 +47,18 @@ export async function getTicket(ticketId: string): Promise<TicketDoc> {
 /**
  * Calls the backend API to redeem a ticket.
  */
-export async function redeemTicket(ticketId: string, nonce: string): Promise<any> {
-  const response = await fetch("http://localhost:3001/api/tickets.redeem", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ ticketId, nonce }),
-  });
-
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || "Failed to redeem ticket.");
-  }
-
-  const result = await response.json();
-  return result;
-}
+export async function redeemTicket(ticketId: string, nonce: string): Promise<{ success: boolean; message?: string }> {
+    const response = await fetch("http://localhost:3001/api/tickets.redeem", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ticketId, nonce }),
+    });
+  
+    const result = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(result.message || "Failed to redeem ticket.");
+    }
+  
+    return result;
+  }

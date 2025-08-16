@@ -192,3 +192,50 @@ const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Backend server running on http://localhost:${PORT}`);
 });
+// Define the backend API route for ticket redemption
+// backend/server.js
+// ... (existing code)
+
+// Define the backend API route for ticket redemption
+app.post('/api/tickets.redeem', async (req, res) => {
+  try {
+    const { ticketId, nonce } = req.body;
+    if (!ticketId) {
+      return res.status(400).json({ success: false, message: "Ticket ID is required." });
+    }
+
+    const ticketRef = db.collection('tickets').doc(ticketId);
+    const ticketSnap = await ticketRef.get();
+
+    if (!ticketSnap.exists) {
+      return res.status(404).json({ success: false, message: "Ticket not found." });
+    }
+
+    const ticket = ticketSnap.data();
+    if (!ticket) {
+      return res.status(500).json({ success: false, message: 'Ticket data is corrupt.' });
+    }
+
+    if (ticket.status === 'redeemed') {
+      return res.status(400).json({ success: false, message: "Ticket has already been redeemed." });
+    }
+
+    // Check for a valid nonce unless it's a manual redemption
+    if (nonce !== "manual_redeem" && ticket.qrTokenHash !== nonce) {
+        return res.status(400).json({ success: false, message: "Invalid ticket nonce or QR code." });
+    }
+
+    await ticketRef.update({
+      status: 'redeemed',
+      redeemedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    res.status(200).json({ success: true, message: "Ticket redeemed successfully!" });
+
+  } catch (error) {
+    console.error('API Error:', error);
+    res.status(500).json({ success: false, message: error.message || "An unknown error occurred." });
+  }
+});
+
+// ... (existing code)

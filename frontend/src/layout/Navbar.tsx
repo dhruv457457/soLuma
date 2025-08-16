@@ -1,3 +1,4 @@
+// src/components/NavBar.tsx
 import { useEffect, useRef, useState } from "react";
 import { NavLink, useLocation, Link } from "react-router-dom";
 import {
@@ -15,9 +16,11 @@ type NavItem = {
 };
 
 const navItems: NavItem[] = [
-  { label: "Create Event", to: "/create" },
+  { label: "Create Event", to: "/org/events" },
   { label: "Docs", to: "/docs" },
   { label: "Explore Events", to: "/events" },
+  { label: "Scanner", to: "/scan" },
+  { label: "My Tickets", to: "/tickets" },
 ];
 
 function navClasses(isActive: boolean) {
@@ -34,6 +37,8 @@ export default function NavBar() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
+  // 🚀 NEW: Add an initial loading state
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
   const location = useLocation();
   const panelRef = useRef<HTMLDivElement | null>(null);
   const btnRef = useRef<HTMLButtonElement | null>(null);
@@ -57,6 +62,27 @@ export default function NavBar() {
 
   const { accounts } = useSolanaWallet();
   const addressAvailable = accounts && accounts.length > 0;
+
+  // 🔄 REVISED: Handle initial loading state
+  useEffect(() => {
+    // We only want to run this once on mount
+    const handleConnect = async () => {
+      try {
+        await connect();
+      } catch (e) {
+        console.error("Auto-connect failed:", e);
+      } finally {
+        // This ensures loading is false after the attempt
+        setIsInitialLoading(false);
+      }
+    };
+
+    if (!isConnected) {
+      handleConnect();
+    } else {
+      setIsInitialLoading(false);
+    }
+  }, [connect, isConnected]);
 
   // Update time every minute
   useEffect(() => {
@@ -130,23 +156,33 @@ export default function NavBar() {
   };
 
   const WalletSection = () => {
+    // 🚀 NEW: Check for the new initial loading state first
+    if (isInitialLoading) {
+      return (
+        <div className="relative inline-flex items-center justify-center group">
+          <button
+            className="cursor-not-allowed relative inline-flex items-center justify-center px-7 py-2 text-base font-normal text-white bg-black border border-transparent rounded-full opacity-50"
+            disabled={true}
+          >
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              Connecting...
+            </div>
+          </button>
+        </div>
+      );
+    }
+
+    // Now, proceed with the original logic only after the initial check is complete
     if (!isConnected) {
       return (
         <div className="relative inline-flex items-center justify-center group">
           <div className=" absolute transition-all duration-200 rounded-full -inset-px bg-gradient-to-r from-cyan-500 to-purple-500"></div>
           <button
-            className="cursor-pointer relative inline-flex items-center justify-center px-7 py-2 text-base font-normal text-white bg-black border border-transparent rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
-            disabled={connectLoading}
+            className="cursor-pointer relative inline-flex items-center justify-center px-7 py-2 text-base font-normal text-white bg-black border border-transparent rounded-full"
             onClick={connect}
           >
-            {connectLoading ? (
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                Connecting...
-              </div>
-            ) : (
-              "Connect Wallet"
-            )}
+            Connect Wallet
           </button>
         </div>
       );
@@ -446,188 +482,188 @@ export default function NavBar() {
                 )}
               </button>
             </div>
-          </div>
 
-          {/* Mobile panel */}
-          <div
-            ref={panelRef}
-            className={`md:hidden overflow-hidden transition-[max-height] duration-300 ${
-              open ? "max-h-96" : "max-h-0"
-            }`}
-          >
-            <div className="border-t border-gray-800/50 py-4 space-y-3">
-              {/* Mobile Time Display */}
-              <div className="px-3">
-                <div className="text-gray-400 text-sm font-mono bg-gray-900/50 px-3 py-2 rounded-lg border border-gray-800 text-center">
-                  {formatTime(currentTime)}
+            {/* Mobile panel */}
+            <div
+              ref={panelRef}
+              className={`md:hidden overflow-hidden transition-[max-height] duration-300 ${
+                open ? "max-h-96" : "max-h-0"
+              }`}
+            >
+              <div className="border-t border-gray-800/50 py-4 space-y-3">
+                {/* Mobile Time Display */}
+                <div className="px-3">
+                  <div className="text-gray-400 text-sm font-mono bg-gray-900/50 px-3 py-2 rounded-lg border border-gray-800 text-center">
+                    {formatTime(currentTime)}
+                  </div>
                 </div>
-              </div>
 
-              {/* Mobile Navigation Links */}
-              <div className="space-y-1 px-3">
-                {navItems.map(({ label, to }) => (
-                  <NavLink
-                    key={to}
-                    to={to}
-                    className={({ isActive }) =>
-                      [
-                        "block px-4 py-3 rounded-lg text-base font-medium transition-all duration-200",
-                        isActive
-                          ? "bg-blue-600/20 text-blue-400 border border-blue-500/30"
-                          : "text-gray-300 hover:text-white hover:bg-gray-800/50",
-                      ].join(" ")
-                    }
-                  >
-                    {label}
-                  </NavLink>
-                ))}
-              </div>
+                {/* Mobile Navigation Links */}
+                <div className="space-y-1 px-3">
+                  {navItems.map(({ label, to }) => (
+                    <NavLink
+                      key={to}
+                      to={to}
+                      className={({ isActive }) =>
+                        [
+                          "block px-4 py-3 rounded-lg text-base font-medium transition-all duration-200",
+                          isActive
+                            ? "bg-blue-600/20 text-blue-400 border border-blue-500/30"
+                            : "text-gray-300 hover:text-white hover:bg-gray-800/50",
+                        ].join(" ")
+                      }
+                    >
+                      {label}
+                    </NavLink>
+                  ))}
+                </div>
 
-              {/* Mobile Wallet Section */}
-              <div className="border-t border-gray-800/50 pt-4 mt-4 px-3">
-                {!isConnected ? (
-                  <button
-                    className="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white text-sm font-medium rounded-xl transition-all duration-200 disabled:opacity-50"
-                    disabled={connectLoading}
-                    onClick={connect}
-                  >
-                    {connectLoading ? (
-                      <div className="flex items-center justify-center gap-2">
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                        Connecting...
-                      </div>
-                    ) : (
-                      "Connect Wallet"
-                    )}
-                  </button>
-                ) : (
-                  <div className="space-y-3">
-                    {/* Mobile Wallet Info Card */}
-                    {addressAvailable && (
-                      <div className="bg-gray-900/80 rounded-lg p-4 border border-gray-800">
-                        <div className="flex items-start gap-3">
-                          <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <svg
-                              className="w-4 h-4 text-white"
-                              viewBox="0 0 24 24"
-                              fill="currentColor"
-                            >
-                              <path d="M21,18V19A2,2 0 0,1 19,21H5C3.89,21 3,20.1 3,19V5A2,2 0 0,1 5,3H19A2,2 0 0,1 21,5V6H12A2,2 0 0,0 10,8V16A2,2 0 0,0 12,18H21Z" />
-                            </svg>
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between">
-                              <div>
-                                <h3 className="text-white font-medium text-sm">
-                                  {accounts[0].slice(0, 6)}...
-                                  {accounts[0].slice(-4)}
-                                </h3>
-                                <span className="text-green-400 text-xs font-medium">
-                                  Connected
-                                </span>
-                              </div>
-                              <button
-                                onClick={() => copyToClipboard(accounts[0])}
-                                className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
-                                title="Copy address"
+                {/* Mobile Wallet Section */}
+                <div className="border-t border-gray-800/50 pt-4 mt-4 px-3">
+                  {!isConnected ? (
+                    <button
+                      className="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white text-sm font-medium rounded-xl transition-all duration-200 disabled:opacity-50"
+                      disabled={connectLoading}
+                      onClick={connect}
+                    >
+                      {connectLoading ? (
+                        <div className="flex items-center justify-center gap-2">
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          Connecting...
+                        </div>
+                      ) : (
+                        "Connect Wallet"
+                      )}
+                    </button>
+                  ) : (
+                    <div className="space-y-3">
+                      {/* Mobile Wallet Info Card */}
+                      {addressAvailable && (
+                        <div className="bg-gray-900/80 rounded-lg p-4 border border-gray-800">
+                          <div className="flex items-start gap-3">
+                            <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                              <svg
+                                className="w-4 h-4 text-white"
+                                viewBox="0 0 24 24"
+                                fill="currentColor"
                               >
-                                <svg
-                                  className="w-4 h-4"
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  stroke="currentColor"
+                                <path d="M21,18V19A2,2 0 0,1 19,21H5C3.89,21 3,20.1 3,19V5A2,2 0 0,1 5,3H19A2,2 0 0,1 21,5V6H12A2,2 0 0,0 10,8V16A2,2 0 0,0 12,18H21Z" />
+                              </svg>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <h3 className="text-white font-medium text-sm">
+                                    {accounts[0].slice(0, 6)}...
+                                    {accounts[0].slice(-4)}
+                                  </h3>
+                                  <span className="text-green-400 text-xs font-medium">
+                                    Connected
+                                  </span>
+                                </div>
+                                <button
+                                  onClick={() => copyToClipboard(accounts[0])}
+                                  className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
+                                  title="Copy address"
                                 >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                                  />
-                                </svg>
-                              </button>
+                                  <svg
+                                    className="w-4 h-4"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                                    />
+                                  </svg>
+                                </button>
+                              </div>
                             </div>
                           </div>
                         </div>
+                      )}
+
+                      {/* Mobile Menu Options */}
+                      <div className="bg-gray-900/50 border border-gray-800 rounded-lg overflow-hidden">
+                        <Link
+                          to="/profile"
+                          className="flex items-center gap-3 w-full px-4 py-3 text-sm text-gray-300 hover:text-white hover:bg-gray-800/50 transition-colors border-b border-gray-800"
+                          onClick={() => setOpen(false)}
+                        >
+                          <svg
+                            className="w-5 h-5 text-gray-500"
+                            viewBox="0 0 24 24"
+                            fill="currentColor"
+                          >
+                            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                          </svg>
+                          <span className="font-medium">Dashboard</span>
+                        </Link>
+
+                        <Link
+                          to="/settings"
+                          className="flex items-center gap-3 w-full px-4 py-3 text-sm text-gray-300 hover:text-white hover:bg-gray-800/50 transition-colors border-b border-gray-800"
+                          onClick={() => setOpen(false)}
+                        >
+                          <svg
+                            className="w-5 h-5 text-gray-500"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                            />
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                            />
+                          </svg>
+                          <span className="font-medium">Settings</span>
+                        </Link>
+
+                        <button
+                          onClick={() => {
+                            disconnect({ cleanup: true });
+                            setOpen(false);
+                          }}
+                          disabled={disconnectLoading}
+                          className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-400 hover:text-red-300 hover:bg-red-900/20 transition-colors disabled:opacity-50"
+                        >
+                          <svg
+                            className="w-5 h-5"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                            />
+                          </svg>
+                          <span className="font-medium">
+                            {disconnectLoading ? "Signing out..." : "Sign out"}
+                          </span>
+                        </button>
                       </div>
-                    )}
-
-                    {/* Mobile Menu Options */}
-                    <div className="bg-gray-900/50 border border-gray-800 rounded-lg overflow-hidden">
-                      <Link
-                        to="/profile"
-                        className="flex items-center gap-3 w-full px-4 py-3 text-sm text-gray-300 hover:text-white hover:bg-gray-800/50 transition-colors border-b border-gray-800"
-                        onClick={() => setOpen(false)}
-                      >
-                        <svg
-                          className="w-5 h-5 text-gray-500"
-                          viewBox="0 0 24 24"
-                          fill="currentColor"
-                        >
-                          <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-                        </svg>
-                        <span className="font-medium">Dashboard</span>
-                      </Link>
-
-                      <Link
-                        to="/settings"
-                        className="flex items-center gap-3 w-full px-4 py-3 text-sm text-gray-300 hover:text-white hover:bg-gray-800/50 transition-colors border-b border-gray-800"
-                        onClick={() => setOpen(false)}
-                      >
-                        <svg
-                          className="w-5 h-5 text-gray-500"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-                          />
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                          />
-                        </svg>
-                        <span className="font-medium">Settings</span>
-                      </Link>
-
-                      <button
-                        onClick={() => {
-                          disconnect({ cleanup: true });
-                          setOpen(false);
-                        }}
-                        disabled={disconnectLoading}
-                        className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-400 hover:text-red-300 hover:bg-red-900/20 transition-colors disabled:opacity-50"
-                      >
-                        <svg
-                          className="w-5 h-5"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                          />
-                        </svg>
-                        <span className="font-medium">
-                          {disconnectLoading ? "Signing out..." : "Sign out"}
-                        </span>
-                      </button>
                     </div>
-                  </div>
-                )}
-                {(connectError || disconnectError) && (
-                  <div className="mt-3 text-xs text-red-400 text-center bg-red-900/20 border border-red-800 rounded-lg py-2 px-3">
-                    {connectError?.message || disconnectError?.message}
-                  </div>
-                )}
+                  )}
+                  {(connectError || disconnectError) && (
+                    <div className="mt-3 text-xs text-red-400 text-center bg-red-900/20 border border-red-800 rounded-lg py-2 px-3">
+                      {connectError?.message || disconnectError?.message}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
