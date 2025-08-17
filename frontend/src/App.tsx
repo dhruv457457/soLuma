@@ -12,6 +12,7 @@ import Scanner from "./pages/Scanner";
 import CreateEvent from "./pages/EventCreate";
 import OrgEventDashboard from "./pages/OrgEventDashboard";
 import NotFound from "./pages/NotFound";
+import DocumentationPage from "./pages/docSection"
 
 export default function App() {
   return (
@@ -19,6 +20,9 @@ export default function App() {
       <NavBar />
       <Routes>
         <Route path="/" element={<Home />} />
+
+        <Route path="/docs" element={<DocumentationPage />} />
+
         <Route path="/events" element={<EventsList />} />
         <Route path="/e/:id" element={<EventDetails />} />
         <Route path="/checkout/:eventId" element={<EventCheckout />} />
