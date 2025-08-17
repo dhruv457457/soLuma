@@ -37,13 +37,15 @@ export default function NavBar() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
-  // 🚀 NEW: Add an initial loading state
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const location = useLocation();
   const panelRef = useRef<HTMLDivElement | null>(null);
   const btnRef = useRef<HTMLButtonElement | null>(null);
   const profilePanelRef = useRef<HTMLDivElement | null>(null);
   const profileBtnRef = useRef<HTMLButtonElement | null>(null);
+
+  // 🚀 NEW: State to track whether the user has scrolled
+  const [isScrolled, setIsScrolled] = useState(false);
 
   // Web3Auth hooks
   const {
@@ -63,16 +65,13 @@ export default function NavBar() {
   const { accounts } = useSolanaWallet();
   const addressAvailable = accounts && accounts.length > 0;
 
-  // 🔄 REVISED: Handle initial loading state
   useEffect(() => {
-    // We only want to run this once on mount
     const handleConnect = async () => {
       try {
         await connect();
       } catch (e) {
         console.error("Auto-connect failed:", e);
       } finally {
-        // This ensures loading is false after the attempt
         setIsInitialLoading(false);
       }
     };
@@ -83,6 +82,22 @@ export default function NavBar() {
       setIsInitialLoading(false);
     }
   }, [connect, isConnected]);
+
+  // 🚀 NEW: Effect to handle scroll events
+  useEffect(() => {
+    const handleScroll = () => {
+      // Sets isScrolled to true if user scrolls more than 10px, otherwise false
+      setIsScrolled(window.scrollY > 10);
+    };
+
+    // Add scroll event listener
+    window.addEventListener("scroll", handleScroll);
+
+    // Cleanup by removing the event listener when the component unmounts
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []); // The empty dependency array ensures this effect runs only once
 
   // Update time every minute
   useEffect(() => {
@@ -103,14 +118,12 @@ export default function NavBar() {
     function onClick(e: MouseEvent) {
       const t = e.target as Node;
 
-      // Close mobile menu
       if (open && panelRef.current && btnRef.current) {
         if (!panelRef.current.contains(t) && !btnRef.current.contains(t)) {
           setOpen(false);
         }
       }
 
-      // Close profile dropdown
       if (profileOpen && profilePanelRef.current && profileBtnRef.current) {
         if (
           !profilePanelRef.current.contains(t) &&
@@ -156,7 +169,6 @@ export default function NavBar() {
   };
 
   const WalletSection = () => {
-    // 🚀 NEW: Check for the new initial loading state first
     if (isInitialLoading) {
       return (
         <div className="relative inline-flex items-center justify-center group">
@@ -173,7 +185,6 @@ export default function NavBar() {
       );
     }
 
-    // Now, proceed with the original logic only after the initial check is complete
     if (!isConnected) {
       return (
         <div className="relative inline-flex items-center justify-center group">
@@ -379,18 +390,23 @@ export default function NavBar() {
       </div>
 
       <nav
-        className="sticky top-0 z-50 backdrop-blur-2xl border-b border-white/5 transition-all duration-300"
-        style={{
-          background:
-            "linear-gradient(135deg, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.97) 50%, rgba(0,0,0,0.98) 100%)",
-          backdropFilter: "blur(32px) saturate(180%)",
-          WebkitBackdropFilter: "blur(32px) saturate(180%)",
-          borderImage:
-            "linear-gradient(90deg, rgba(0,0,0,0.4), rgba(0,0,0,0.3)) 1",
-          boxShadow:
-            "0 8px 32px 0 rgba(0,0,0,0.5), inset 0 1px 0 0 rgba(255,255,255,0.02)",
-        }}
-      >
+    className={`sticky top-0 z-50 transition-all duration-300 ${
+        isScrolled
+            ? "border-b border-white/5" 
+            : "bg-black border-b border-transparent"
+    }`}
+    style={
+        isScrolled ? {
+                background:
+                    "linear-gradient(135deg, rgba(10, 10, 10, 0.7) 0%, rgba(15, 15, 15, 0.75) 100%)",
+                backdropFilter: "blur(24px) saturate(150%)",
+                WebkitBackdropFilter: "blur(24px) saturate(150%)",
+                boxShadow:
+                    "0 8px 32px 0 rgba(0,0,0,0.37), inset 0 1px 0 0 rgba(255,255,255,0.05)",
+            }
+            : {}
+    }
+>
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           {/* Bar */}
           <div className="flex h-16 items-center justify-between">

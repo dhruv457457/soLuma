@@ -8,7 +8,8 @@ import EventCheckout from "./pages/EventCheckout";
 import MyTickets from "./pages/MyTickets";
 import TicketView from "./pages/TicketView";
 import Scanner from "./pages/Scanner";
-import CreateEvent from "./pages/CreateEvent";
+// import CreateEvent from "./pages/CreateEvent";
+import CreateEvent from "./pages/EventCreate";
 import OrgEventDashboard from "./pages/OrgEventDashboard";
 import NotFound from "./pages/NotFound";
 
