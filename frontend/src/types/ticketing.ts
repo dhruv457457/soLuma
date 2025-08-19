@@ -16,8 +16,8 @@ export interface EventDoc {
   salesCount: number;
   createdBy: string;
   status: "draft" | "published" | "ended";
+  splToken?: string;  // Add this line
 }
-
 export interface OrderDoc {
   id: string;
   eventId: string;

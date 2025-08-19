@@ -173,6 +173,10 @@ app.post('/api/tickets.redeem', async (req, res) => {
     if (ticket.status === 'redeemed') {
       return res.status(400).json({ success: false, message: "Ticket has already been redeemed." });
     }
+
+   
+
+
     // Check nonce
     if (nonce !== "manual_redeem" && ticket.qrTokenHash !== nonce) {
       return res.status(400).json({ success: false, message: "Invalid ticket nonce or QR code." });
