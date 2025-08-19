@@ -29,11 +29,13 @@ export async function verifyOrderAndGetTickets({
   txSig,
   reference,
   buyerWallet,
+  splToken, // <-- NEW: Add splToken here
 }: {
   orderId: string;
   txSig: string;
   reference: string;
   buyerWallet: string;
+  splToken?: string; // <-- NEW: Add splToken here
 }): Promise<string[]> {
   const response = await fetch("http://localhost:3001/api/orders.verify", {
     method: "POST",
@@ -44,6 +46,7 @@ export async function verifyOrderAndGetTickets({
       reference,
       buyerWallet,
       cluster: CLUSTER,
+      splToken, // <-- NEW: Pass splToken to the backend
     }),
   });
 

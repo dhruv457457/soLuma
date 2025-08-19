@@ -24,8 +24,13 @@ import {
 
 type Currency = "SOL" | "USDC";
 
+// USDC Token Mint Address for Solana Devnet
+const USDC_MINT_ADDRESS = "Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr";
+
 function toLamports(amount: number, currency: Currency) {
-  return Math.round(amount * (currency === "SOL" ? 1e9 : 1e6));
+  // Correctly handle decimals for SOL (1e9) and USDC (1e6)
+  const decimals = currency === "SOL" ? 9 : 6;
+  return Math.round(amount * Math.pow(10, decimals));
 }
 
 function slugify(s: string) {
@@ -145,6 +150,8 @@ export default function CreateEventEnhanced() {
       // 🔄 REVISED: Use the Cloudinary URL
       bannerUrl,
       createdBy: uid,
+      // 🚀 NEW: Conditionally add the splToken field
+      ...(currency === "USDC" ? { splToken: USDC_MINT_ADDRESS } : {}),
     };
 
     // 🔄 REVISED: Use the React Query mutation to submit the event data
@@ -281,6 +288,7 @@ export default function CreateEventEnhanced() {
                       className="w-full bg-black border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 transition-all duration-300"
                       value={endsAt}
                       onChange={(e) => setEndsAt(e.target.value)}
+                      required
                     />
                   </div>
                 </div>

@@ -45,15 +45,15 @@ export default function Scanner() {
       } catch (e) {
         throw new Error("Invalid QR code: Not a valid URL.");
       }
-
       const ticketId = url.searchParams.get("ticketId");
-      const nonce = url.searchParams.get("nonce");
-
-      if (!ticketId || !nonce) {
-        throw new Error("Invalid QR code format. Missing ticketId or nonce.");
+      const nonce = url.searchParams.get("nonce") || "manual_redeem";
+      
+      if (!ticketId) {
+        throw new Error("Invalid QR code format. Missing ticketId.");
       }
-
+      
       const result = await redeemTicket(ticketId, nonce);
+      
       if (result.success) {
         setStatus("success");
         setScanMessage("Ticket redeemed successfully!");

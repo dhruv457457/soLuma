@@ -1,3 +1,5 @@
+// src/pages/TicketView.tsx
+
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import QRCode from "react-qr-code";
@@ -15,7 +17,6 @@ export default function TicketView() {
 
   useEffect(() => {
     if (!ticketId) return;
-
     const fetchTicketData = async () => {
       try {
         const ticketDoc = await getTicket(ticketId);
@@ -23,11 +24,8 @@ export default function TicketView() {
         setTicket(ticketDoc);
         setEvent(eventDoc);
       } catch (e) {
-        if (e instanceof Error) {
-          setError(e.message);
-        } else {
-          setError("An unexpected error occurred");
-        }
+        if (e instanceof Error) setError(e.message);
+        else setError("An unexpected error occurred");
       } finally {
         setLoading(false);
       }
@@ -35,18 +33,12 @@ export default function TicketView() {
     fetchTicketData();
   }, [ticketId]);
 
+  // Generate **static** QR (single per ticket)
   useEffect(() => {
     if (!ticket) return;
-
-    const generateNonce = () => {
-      const nonce = Math.random().toString(36).substring(2, 10);
-      setQrValue(`${window.location.origin}/scan?ticketId=${ticket.id}&nonce=${nonce}`);
-    };
-
-    generateNonce();
-    const interval = setInterval(generateNonce, 15000);
-
-    return () => clearInterval(interval);
+    setQrValue(`${window.location.origin}/scan?ticketId=${ticket.id}`);
+    // For extra security:
+    // setQrValue(`${window.location.origin}/scan?ticketId=${ticket.id}&secret=${ticket.qrTokenHash}`);
   }, [ticket]);
 
   if (loading) return <div className="p-6">Loading ticket...</div>;
@@ -61,7 +53,7 @@ export default function TicketView() {
         <QRCode value={qrValue} size={256} />
       </div>
       <p className="mt-4 text-sm text-gray-500">
-        This QR code refreshes every 15 seconds to prevent screenshots.
+        This QR code is your unique ticket. Show this at entry.
       </p>
     </div>
   );
