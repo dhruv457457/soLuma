@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import QrScanner from 'qr-scanner';
 import { redeemTicket } from '../lib/tickets';
+// ...existing code...
 
 export default function Scanner() {
   const videoRef = useRef(null);
@@ -110,6 +111,7 @@ export default function Scanner() {
   };
 
   return (
+    <>
     <div className="max-w-md mx-auto p-6 text-center">
       <h2 className="text-2xl font-semibold mb-4">Ticket Scanner</h2>
       
@@ -140,5 +142,6 @@ export default function Scanner() {
         </button>
       </div>
     </div>
+    </>
   );
 }

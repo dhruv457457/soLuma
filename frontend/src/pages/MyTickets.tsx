@@ -85,6 +85,7 @@ export default function MyTickets() {
   if (error) return <div className="p-6 text-red-600">Error: {error}</div>;
 
   return (
+    <>
     <div className="max-w-3xl mx-auto p-6">
       <h2 className="text-2xl font-semibold text-blue-700 mb-4">My Tickets</h2>
       {tickets.length === 0 ? (
@@ -97,5 +98,6 @@ export default function MyTickets() {
         </div>
       )}
     </div>
+    </>
   );
 }

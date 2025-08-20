@@ -12,7 +12,6 @@ import { createEvent } from "../lib/events";
 import { useSolanaWallet } from "@web3auth/modal/react/solana";
 // 🚀 NEW: Import the Cloudinary upload utility
 import { uploadImage } from "../lib/cloudinary";
-
 import {
   Upload,
   Calendar,
@@ -162,6 +161,7 @@ export default function CreateEventEnhanced() {
   const submitting = createEventMutation.isPending;
 
   return (
+    <>
     <div className="min-h-screen bg-black p-4">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
@@ -405,5 +405,6 @@ export default function CreateEventEnhanced() {
         </div>
       </div>
     </div>
+    </>
   );
 }

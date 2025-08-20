@@ -285,7 +285,7 @@ export default function NavBar() {
             {/* Menu Options */}
             <div className="py-2">
               <Link
-                to="/profile"
+                to="/dashboard"
                 className="group flex items-center gap-3 px-4 py-3 text-white hover:bg-gray-800/70 transition-all duration-200 transform hover:translate-x-1"
                 onClick={() => setProfileOpen(false)}
               >
@@ -295,7 +295,7 @@ export default function NavBar() {
                   </svg>
                 </div>
                 <span className="text-sm font-medium group-hover:text-blue-100 transition-colors duration-200">
-                  Your Profile
+                  Dashboard
                 </span>
               </Link>
 
