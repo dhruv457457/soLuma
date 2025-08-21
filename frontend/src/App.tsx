@@ -9,7 +9,6 @@ import TicketView from "./pages/TicketView";
 import Scanner from "./pages/Scanner";
 // import CreateEvent from "./pages/CreateEvent";
 import CreateEvent from "./pages/CreateEvent";
-import OrgEventDashboard from "./pages/OrgEventDashboard";
 import NotFound from "./pages/NotFound";
 import DocumentationPage from "./pages/docSection";
 import OrganizerDashboard from "./pages/organizerDashboard/section"
@@ -29,7 +28,6 @@ export default function App() {
           <Route path="/tickets/:ticketId" element={<TicketView />} />
           <Route path="/scan" element={<Scanner />} />
           <Route path="/org/events" element={<CreateEvent />} />
-          <Route path="/org/events/:id" element={<OrgEventDashboard />} />
         </Route>
 
         <Route path="/dashboard" element={<OrganizerDashboard />} />

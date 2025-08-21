@@ -3,14 +3,11 @@
 
 import type React from "react";
 import { useState, useEffect } from "react";
-// 🚀 NEW: Import react-router-dom and react-query hooks
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-// 🚀 NEW: Import Firebase functions and the createEvent API call
 import { ensureFirebaseAuth, auth } from "../config/firebase";
 import { createEvent } from "../lib/events";
 import { useSolanaWallet } from "@web3auth/modal/react/solana";
-// 🚀 NEW: Import the Cloudinary upload utility
 import { uploadImage } from "../lib/cloudinary";
 import {
   Upload,
@@ -23,11 +20,9 @@ import {
 
 type Currency = "SOL" | "USDC";
 
-// USDC Token Mint Address for Solana Devnet
 const USDC_MINT_ADDRESS = "Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr";
 
 function toLamports(amount: number, currency: Currency) {
-  // Correctly handle decimals for SOL (1e9) and USDC (1e6)
   const decimals = currency === "SOL" ? 9 : 6;
   return Math.round(amount * Math.pow(10, decimals));
 }
@@ -55,7 +50,6 @@ export default function CreateEventEnhanced() {
   );
   const [err, setErr] = useState<string | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
-  // 🚀 NEW: State to hold the image file object
   const [logoFile, setLogoFile] = useState<File | null>(null);
 
   const navigate = useNavigate();
@@ -85,7 +79,6 @@ export default function CreateEventEnhanced() {
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // 🚀 NEW: Set the file object in state
       setLogoFile(file);
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -112,20 +105,19 @@ export default function CreateEventEnhanced() {
 
     const capNum = Math.max(1, Number(capacity) || 0);
 
-    const uid = auth.currentUser?.uid;
-    if (!uid) {
-      setErr("Not signed in. Please refresh and try again.");
-      return;
+    // --- CRITICAL CHANGE: Use the connected Solana wallet for 'createdBy' ---
+    const organizerWallet = accounts?.[0];
+    if (!organizerWallet) {
+        setErr("Please connect your wallet to create an event.");
+        return;
     }
 
     let bannerUrl = "";
-    // 🚀 NEW: Upload the image to Cloudinary first if a file exists
     if (logoFile) {
       try {
-        setErr(null); // Clear any previous errors
-        createEventMutation.reset(); // Reset mutation state before starting
+        setErr(null);
+        createEventMutation.reset();
         
-        // This line is crucial for starting the upload
         bannerUrl = await uploadImage(logoFile);
       } catch (error: any) {
         setErr(error.message || "Failed to upload image.");
@@ -146,18 +138,14 @@ export default function CreateEventEnhanced() {
       capacity: capNum,
       salesCount: 0,
       status: "published",
-      // 🔄 REVISED: Use the Cloudinary URL
       bannerUrl,
-      createdBy: uid,
-      // 🚀 NEW: Conditionally add the splToken field
+      createdBy: organizerWallet, // Use the Solana wallet address here
       ...(currency === "USDC" ? { splToken: USDC_MINT_ADDRESS } : {}),
     };
 
-    // 🔄 REVISED: Use the React Query mutation to submit the event data
     createEventMutation.mutate(newEvent);
   }
 
-  // 🔄 REVISED: Use mutation state for submitting, including the upload phase
   const submitting = createEventMutation.isPending;
 
   return (
@@ -371,7 +359,6 @@ export default function CreateEventEnhanced() {
 
                 {/* Submit Button */}
                 <div className="relative inline-flex items-center justify-center w-full group ">
-                  {/* This div creates the gradient border. It turns gray when submitting. */}
                   <div
                     className={`absolute transition-all duration-200 rounded-full -inset-px ${
                       submitting

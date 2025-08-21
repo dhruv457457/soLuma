@@ -22,6 +22,10 @@ export default function MyTickets() {
   const { accounts } = useSolanaWallet();
   const wallet = accounts?.[0] || "";
 
+  console.log("Wallet accounts:", accounts);
+  console.log("Using wallet address:", wallet || 'No wallet connected');
+  console.log("Is wallet connected:", !!wallet);
+
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [loading, setLoading] = useState(true);
   const [tickets, setTickets] = useState<(TicketDoc & { event: EventDoc | null })[]>([]);
@@ -44,10 +48,12 @@ export default function MyTickets() {
   useEffect(() => {
     // Only proceed if auth is ready and a wallet is connected
     if (!isAuthReady) {
+      console.log("Auth not ready yet");
       return;
     }
 
     if (!wallet) {
+      console.warn("No wallet connected. Cannot fetch tickets.");
       setLoading(false);
       setError("Please connect your wallet to view tickets.");
       return;

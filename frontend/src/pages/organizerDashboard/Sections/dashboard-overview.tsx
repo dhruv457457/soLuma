@@ -1,36 +1,119 @@
-"use client"
+// src/pages/organizerDashboard/Sections/dashboard-overview.tsx
 
-import { Card, CardContent, CardHeader, CardTitle } from "../../../ui/card"
-import { Button } from "../../../ui/button"
-import { Badge } from "../../../ui/badge"
-import { Progress } from "../../../ui/progress"
+"use client";
+
+import { useEffect, useState } from "react";
+// Now we can re-add the hook because the component is in the right place
+import { useSolanaWallet } from "@web3auth/modal/react/solana";
+
+import { Card, CardContent, CardHeader, CardTitle } from "../../../ui/card";
+import { Button } from "../../../ui/button";
+import { Badge } from "../../../ui/badge";
+import { Progress } from "../../../ui/progress";
+
+import {
+  getOrganizerEvents,
+  getDashboardStats,
+  subscribeToRecentActivity,
+} from "../../../lib/dashboard";
+import type { EventDoc, OrderDoc } from "../../../types/ticketing";
+import { ensureFirebaseAuth } from "../../../config/firebase";
 
 export function DashboardOverview() {
-  const stats = [
-    { title: "Total Events", value: "24", change: "+12%", trend: "up" },
-    { title: "Active Events", value: "8", change: "+3", trend: "up" },
-    { title: "Total Revenue", value: "$45,230", change: "+18%", trend: "up" },
-    { title: "Tickets Sold", value: "1,847", change: "+25%", trend: "up" },
-  ]
+  const { accounts } = useSolanaWallet();
+  const organizerWallet = accounts?.[0] || '';
+  const isConnected = !!organizerWallet;
 
-  const recentEvents = [
-    { name: "Web3 Conference 2024", date: "Dec 15, 2024", status: "Active", sold: 245, total: 300 },
-    { name: "Blockchain Workshop", date: "Dec 20, 2024", status: "Active", sold: 89, total: 150 },
-    { name: "NFT Art Exhibition", date: "Dec 25, 2024", status: "Draft", sold: 0, total: 200 },
-    { name: "DeFi Summit", date: "Jan 5, 2025", status: "Draft", sold: 0, total: 500 },
-  ]
+  const [events, setEvents] = useState<EventDoc[]>([]);
+  const [stats, setStats] = useState({
+    totalRevenue: { SOL: 0, USDC: 0 },
+    totalTicketsSold: 0,
+    activeEvents: 0,
+  });
+  const [recentOrders, setRecentOrders] = useState<OrderDoc[]>([]);
+  const [dataLoading, setDataLoading] = useState(true);
+  const [isAuthReady, setIsAuthReady] = useState(false);
 
-  const recentActivity = [
-    { action: "New ticket purchase", event: "Web3 Conference 2024", time: "2 minutes ago" },
-    { action: "Event published", event: "Blockchain Workshop", time: "1 hour ago" },
-    { action: "Ticket refund processed", event: "Web3 Conference 2024", time: "3 hours ago" },
-    { action: "New attendee registered", event: "Web3 Conference 2024", time: "5 hours ago" },
-    { action: "Event updated", event: "NFT Art Exhibition", time: "1 day ago" },
-  ]
+  // Step 1: Wait for Firebase auth to be ready
+  useEffect(() => {
+    (async () => {
+      try {
+        await ensureFirebaseAuth();
+        setIsAuthReady(true);
+      } catch (e: any) {
+        console.error("Auth failed:", e.message);
+        setDataLoading(false);
+      }
+    })();
+  }, []);
+
+  // Step 2: Load dashboard data only after auth and wallet connection are ready
+  useEffect(() => {
+    // Only proceed if auth is ready
+    if (!isAuthReady) {
+      return;
+    }
+
+    if (!isConnected) {
+      console.warn("Please connect your wallet to view the dashboard");
+      setDataLoading(false);
+      return;
+    }
+
+    console.log("Fetching dashboard data for:", organizerWallet);
+    setDataLoading(true);
+
+    async function fetchData() {
+      try {
+        const orgEvents = await getOrganizerEvents(organizerWallet);
+        setEvents(orgEvents);
+
+        const fetchedStats = await getDashboardStats(orgEvents);
+        setStats(fetchedStats);
+        
+      } catch (e) {
+        console.error("Failed to fetch dashboard data:", e);
+      } finally {
+        setDataLoading(false);
+      }
+    }
+    fetchData();
+  }, [isAuthReady, organizerWallet, isConnected]);
+
+  // Step 3: Set up the real-time listener for recent activity
+  useEffect(() => {
+    if (events.length === 0 || !isConnected) return;
+
+    const eventIds = events.map(e => e.id);
+    const unsubscribe = subscribeToRecentActivity(eventIds, (orders) => {
+      console.log("Real-time orders update:", orders.length, "orders found.");
+      setRecentOrders(orders);
+    });
+    
+    return () => {
+      console.log("Unsubscribing from real-time activity.");
+      unsubscribe();
+    };
+  }, [events, isConnected]);
+
+  if (dataLoading) {
+    return (
+      <div className="flex justify-center items-center h-screen text-gray-400">
+        <div className="w-8 h-8 border-2 border-gray-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+        <p>Loading dashboard...</p>
+      </div>
+    );
+  }
+
+  const formatCurrency = (amount: number, currency: string) => {
+    if (currency === "SOL") return `${(amount / 1e9).toFixed(4)} SOL`;
+    if (currency === "USDC") return `${(amount / 1e6).toFixed(2)} USDC`;
+    return `${amount} ${currency}`;
+  };
 
   return (
     <div className="space-y-8">
-      {/* Header */}
+      {/* ... (rest of the JSX remains unchanged) ... */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
@@ -48,90 +131,107 @@ export function DashboardOverview() {
         </div>
       </div>
 
-      {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, index) => (
-          <Card key={index} className="bg-gray-900/50 border-gray-800 backdrop-blur-sm">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-400 mb-1">{stat.title}</p>
-                  <p className="text-2xl font-bold text-white">{stat.value}</p>
-                </div>
-                <div className="text-right">
-                  <span className={`text-sm font-medium ${stat.trend === "up" ? "text-green-400" : "text-red-400"}`}>
-                    {stat.change}
-                  </span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+        <Card className="bg-gray-900/50 border-gray-800 backdrop-blur-sm">
+          <CardContent className="p-6">
+            <p className="text-sm text-gray-400 mb-1">Total Events</p>
+            <p className="text-2xl font-bold text-white">{events.length}</p>
+          </CardContent>
+        </Card>
+        <Card className="bg-gray-900/50 border-gray-800 backdrop-blur-sm">
+          <CardContent className="p-6">
+            <p className="text-sm text-gray-400 mb-1">Active Events</p>
+            <p className="text-2xl font-bold text-white">{stats.activeEvents}</p>
+          </CardContent>
+        </Card>
+        <Card className="bg-gray-900/50 border-gray-800 backdrop-blur-sm">
+          <CardContent className="p-6">
+            <p className="text-sm text-gray-400 mb-1">Total Revenue</p>
+            <p className="text-2xl font-bold text-white">
+              {formatCurrency(stats.totalRevenue.SOL, "SOL")}
+              <br/>
+              {formatCurrency(stats.totalRevenue.USDC, "USDC")}
+            </p>
+          </CardContent>
+        </Card>
+        <Card className="bg-gray-900/50 border-gray-800 backdrop-blur-sm">
+          <CardContent className="p-6">
+            <p className="text-sm text-gray-400 mb-1">Tickets Sold</p>
+            <p className="text-2xl font-bold text-white">{stats.totalTicketsSold}</p>
+          </CardContent>
+        </Card>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Recent Events */}
         <Card className="bg-gray-900/50 border-gray-800 backdrop-blur-sm">
           <CardHeader>
             <CardTitle className="text-xl text-white">Recent Events</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {recentEvents.map((event, index) => (
+            {events.slice(0, 5).map((event) => (
               <div
-                key={index}
+                key={event.id}
                 className="flex items-center justify-between p-4 rounded-lg bg-gray-800/50 border border-gray-700"
               >
                 <div className="flex-1">
-                  <h3 className="font-semibold text-white mb-1">{event.name}</h3>
-                  <p className="text-sm text-gray-400">{event.date}</p>
+                  <h3 className="font-semibold text-white mb-1">{event.title}</h3>
+                  <p className="text-sm text-gray-400">{new Date(event.startsAt).toLocaleDateString()}</p>
                   <div className="mt-2">
                     <div className="flex items-center justify-between text-sm mb-1">
                       <span className="text-gray-400">Tickets Sold</span>
                       <span className="text-white">
-                        {event.sold}/{event.total}
+                        {event.salesCount}/{event.capacity}
                       </span>
                     </div>
-                    <Progress value={(event.sold / event.total) * 100} className="h-2 bg-gray-700" />
+                    <Progress value={(event.salesCount / event.capacity) * 100} className="h-2 bg-gray-700" />
                   </div>
                 </div>
                 <div className="ml-4">
                   <Badge
-                    variant={event.status === "Active" ? "default" : "secondary"}
+                    variant={event.status === "published" ? "default" : "secondary"}
                     className={
-                      event.status === "Active"
+                      event.status === "published"
                         ? "bg-green-500/20 text-green-400 border-green-500/30"
                         : "bg-gray-500/20 text-gray-400 border-gray-500/30"
                     }
                   >
-                    {event.status}
+                    {event.status === "published" ? "Active" : "Draft"}
                   </Badge>
                 </div>
               </div>
             ))}
+            {events.length === 0 && (
+              <p className="text-center text-gray-500">No events found.</p>
+            )}
           </CardContent>
         </Card>
 
-        {/* Recent Activity */}
         <Card className="bg-gray-900/50 border-gray-800 backdrop-blur-sm">
           <CardHeader>
             <CardTitle className="text-xl text-white">Recent Activity</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {recentActivity.map((activity, index) => (
-              <div key={index} className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-800/30 transition-colors">
+            {recentOrders.slice(0, 5).map((order) => (
+              <div key={order.id} className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-800/30 transition-colors">
                 <div className="w-2 h-2 rounded-full bg-cyan-400 mt-2 flex-shrink-0"></div>
                 <div className="flex-1">
-                  <p className="text-white font-medium">{activity.action}</p>
-                  <p className="text-sm text-gray-400">{activity.event}</p>
-                  <p className="text-xs text-gray-500 mt-1">{activity.time}</p>
+                  <p className="text-white font-medium">New ticket purchase</p>
+                  <p className="text-sm text-gray-400">
+                    {order.qty} ticket(s) for event {order.eventId.slice(0, 6)}...
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {new Date(order.createdAt).toLocaleTimeString()}
+                  </p>
                 </div>
               </div>
             ))}
+            {recentOrders.length === 0 && (
+              <p className="text-center text-gray-500">No recent activity.</p>
+            )}
           </CardContent>
         </Card>
       </div>
 
-      {/* Quick Actions */}
       <Card className="bg-gray-900/50 border-gray-800 backdrop-blur-sm">
         <CardHeader>
           <CardTitle className="text-xl text-white">Quick Actions</CardTitle>
@@ -170,7 +270,6 @@ export function DashboardOverview() {
         </CardContent>
       </Card>
 
-      {/* Performance Chart Placeholder */}
       <Card className="bg-gray-900/50 border-gray-800 backdrop-blur-sm">
         <CardHeader>
           <CardTitle className="text-xl text-white">Sales Performance</CardTitle>
@@ -185,5 +284,5 @@ export function DashboardOverview() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
