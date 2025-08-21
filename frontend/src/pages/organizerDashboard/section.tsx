@@ -3,7 +3,8 @@
 "use client";
 
 import { useState } from "react";
-import { useWeb3Auth } from "@web3auth/modal/react";
+import { useSolanaWallet } from "@web3auth/modal/react/solana";
+import { useWeb3Auth, useWeb3AuthConnect } from "@web3auth/modal/react";
 import { Menu } from "lucide-react";
 import { OrganizerSidebar } from "./Sections/organizer-sidebar";
 import { DashboardOverview } from "./Sections/dashboard-overview";
@@ -21,10 +22,9 @@ export default function OrganizerDashboard() {
   const [activeSection, setActiveSection] = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // The Web3Auth hooks are no longer needed here, but you can keep them
-  // if other dashboard sections need them. For now, let's keep them in case.
-  const { user, isLoading: authLoading } = useWeb3Auth();
-  const organizerWallet = user?.solana?.[0] || null;
+  // Get the Web3Auth instance and connection state
+  const { accounts } = useSolanaWallet();
+  const organizerWallet = accounts?.[0] || null;
 
   const renderContent = () => {
     switch (activeSection) {
