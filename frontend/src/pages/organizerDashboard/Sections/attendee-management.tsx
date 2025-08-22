@@ -11,7 +11,6 @@ import { Badge } from "../../../ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../ui/select";
 import { Checkbox } from "../../../ui/checkbox";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../../../ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "../../../ui/avatar";
 import { getOrganizerEvents, subscribeToOrganizerAttendees } from "../../../lib/dashboard";
 import type { OrderDoc, EventDoc } from "../../../types/ticketing";
 
@@ -29,15 +28,7 @@ export function AttendeeManagement({ setActiveSection, eventId }: AttendeeManage
   const [eventFilter, setEventFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedAttendees, setSelectedAttendees] = useState<string[]>([]);
-
-  const handleCheckboxChange = (attendeeId: string) => {
-    setSelectedAttendees(prev => 
-      prev.includes(attendeeId)
-        ? prev.filter(id => id !== attendeeId)  // Remove if already selected
-        : [...prev, attendeeId]  // Add if not selected
-    );
-  };
-
+  
   const [attendees, setAttendees] = useState<OrderDoc[]>([]);
   const [events, setEvents] = useState<EventDoc[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
@@ -59,10 +50,8 @@ export function AttendeeManagement({ setActiveSection, eventId }: AttendeeManage
         const fetchedEvents = await getOrganizerEvents(organizerWallet);
         setEvents(fetchedEvents as EventDoc[]);
 
-        // Filter events by the specific eventId passed in props, if it exists
         const eventIdsToSubscribe = eventId ? [eventId] : fetchedEvents.map(e => e.id);
         
-        // Use the real-time subscription function
         unsubscribe = subscribeToOrganizerAttendees(eventIdsToSubscribe, (fetchedAttendees) => {
           setAttendees(fetchedAttendees);
           setDataLoading(false);
@@ -75,13 +64,20 @@ export function AttendeeManagement({ setActiveSection, eventId }: AttendeeManage
 
     fetchData();
 
-    // Cleanup function to unsubscribe from the real-time listener
     return () => {
       if (unsubscribe) {
         unsubscribe();
       }
     };
-  }, [isConnected, organizerWallet, eventId]); // Added eventId to the dependency array
+  }, [isConnected, organizerWallet, eventId]);
+
+  const handleCheckboxChange = (attendeeId: string) => {
+    setSelectedAttendees(prev => 
+      prev.includes(attendeeId)
+        ? prev.filter(id => id !== attendeeId)
+        : [...prev, attendeeId]
+    );
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -96,17 +92,15 @@ export function AttendeeManagement({ setActiveSection, eventId }: AttendeeManage
     }
   };
 
-  const attendeesForEvent = attendees.filter(a => a.eventId === eventId);
+  const attendeesForEvent = attendees.filter(a => eventId ? a.eventId === eventId : true);
 
   const filteredAttendees = attendeesForEvent.filter((attendee) => {
     if (!attendee || !attendee.buyerWallet) {
       return false;
     }
-    const matchesSearch = 
-      attendee.buyerWallet.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = attendee.buyerWallet.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesEvent = eventFilter === "all" || attendee.eventId === eventFilter;
-    const matchesStatus =
-      statusFilter === "all" || attendee.checkInStatus === statusFilter;
+    const matchesStatus = statusFilter === "all" || (attendee.checkInStatus || "not-checked-in") === statusFilter;
     return matchesSearch && matchesEvent && matchesStatus;
   });
 
@@ -117,26 +111,18 @@ export function AttendeeManagement({ setActiveSection, eventId }: AttendeeManage
       setSelectedAttendees([]);
     }
   };
-
-  const handleSelectAttendee = (id: string, checked: boolean) => {
-    if (checked) {
-      setSelectedAttendees([...selectedAttendees, id]);
-    } else {
-      setSelectedAttendees(selectedAttendees.filter((aid) => aid !== id));
-    }
-  };
-
+  
   const attendeeStats = {
     total: attendeesForEvent.length,
     checkedIn: attendeesForEvent.filter((a) => a.checkInStatus === "checked-in").length,
-    notCheckedIn: attendeesForEvent.filter((a) => a.checkInStatus === "not-checked-in").length,
+    notCheckedIn: attendeesForEvent.filter((a) => a.checkInStatus === "not-checked-in" || !a.checkInStatus).length,
     noShow: attendeesForEvent.filter((a) => a.checkInStatus === "no-show").length,
   };
 
   if (dataLoading) {
     return (
       <div className="flex justify-center items-center h-screen text-gray-400">
-        <div className="w-8 h-8 border-2 border-gray-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+        <div className="w-8 h-8 border-2 border-gray-400 border-t-transparent rounded-full animate-spin mr-3"></div>
         <p>Loading attendees...</p>
       </div>
     );
@@ -152,22 +138,15 @@ export function AttendeeManagement({ setActiveSection, eventId }: AttendeeManage
           </h1>
           <p className="text-gray-400 mt-2">Manage your event attendees and track check-ins.</p>
         </div>
-        <div className="flex gap-3">
-          <Button variant="outline" className="border-gray-700 hover:bg-gray-800 bg-transparent">
-            Export Data
-          </Button>
-          <Button className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600">
-            Send Message
-          </Button>
-          <Button
-            className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600"
-            onClick={() => setActiveSection("scanner")}
-          >
-            QR Code Scanner
-          </Button>
-        </div>
+        <Button
+          className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600"
+          onClick={() => setActiveSection("scanner")}
+        >
+          QR Code Scanner
+        </Button>
       </div>
       <hr className="border-gray-800" />
+      
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card className="bg-gray-900/50 border-gray-800 backdrop-blur-sm">
@@ -216,31 +195,34 @@ export function AttendeeManagement({ setActiveSection, eventId }: AttendeeManage
         </Card>
       </div>
       <hr className="border-gray-800" />
+
       {/* Filters and Search */}
       <Card className="bg-gray-900/50 border-gray-800 backdrop-blur-sm">
         <CardContent className="p-6">
           <div className="flex flex-col lg:flex-row gap-4">
             <div className="flex-1">
               <Input
-                placeholder="Search attendees by name or email..."
+                placeholder="Search by wallet address..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-500"
               />
             </div>
-            <Select value={eventFilter} onValueChange={setEventFilter}>
-              <SelectTrigger className="w-full lg:w-48 bg-gray-800 border-gray-700 text-white">
-                <SelectValue placeholder="Filter by event" />
-              </SelectTrigger>
-              <SelectContent className="bg-gray-800 border-gray-700">
-                <SelectItem value="all">All Events</SelectItem>
-                {events.map((event) => (
-                  <SelectItem key={event.id} value={event.id}>
-                    {event.title}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {!eventId && ( // Only show event filter if not already on a specific event page
+              <Select value={eventFilter} onValueChange={setEventFilter}>
+                <SelectTrigger className="w-full lg:w-48 bg-gray-800 border-gray-700 text-white">
+                  <SelectValue placeholder="Filter by event" />
+                </SelectTrigger>
+                <SelectContent className="bg-gray-800 border-gray-700">
+                  <SelectItem value="all">All Events</SelectItem>
+                  {events.map((event) => (
+                    <SelectItem key={event.id} value={event.id}>
+                      {event.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-full lg:w-48 bg-gray-800 border-gray-700 text-white">
                 <SelectValue placeholder="Filter by status" />
@@ -255,42 +237,8 @@ export function AttendeeManagement({ setActiveSection, eventId }: AttendeeManage
           </div>
         </CardContent>
       </Card>
-      {/* Bulk Actions */}
-      {selectedAttendees.length > 0 && (
-        <Card className="bg-cyan-500/10 border-cyan-500/30 backdrop-blur-sm">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <span className="text-cyan-400">
-                {selectedAttendees.length} attendee{selectedAttendees.length > 1 ? "s" : ""} selected
-              </span>
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="border-cyan-500 text-cyan-400 hover:bg-cyan-500/10 bg-transparent"
-                >
-                  Send Message
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="border-cyan-500 text-cyan-400 hover:bg-cyan-500/10 bg-transparent"
-                >
-                  Export Selected
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="border-cyan-500 text-cyan-400 hover:bg-cyan-500/10 bg-transparent"
-                >
-                  Check In All
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
       <hr className="border-gray-800" />
+      
       {/* Attendees Table */}
       <Card className="bg-gray-900/50 border-gray-800 backdrop-blur-sm">
         <CardHeader>
@@ -304,10 +252,10 @@ export function AttendeeManagement({ setActiveSection, eventId }: AttendeeManage
                   <th className="text-left py-3 px-4">
                     <Checkbox
                       checked={selectedAttendees.length === filteredAttendees.length && filteredAttendees.length > 0}
-                      onCheckedChange={handleSelectAll}
+                      onCheckedChange={(checked) => handleSelectAll(Boolean(checked))}
                     />
                   </th>
-                  <th className="text-left py-3 px-4 text-gray-400 font-medium">Attendee</th>
+                  <th className="text-left py-3 px-4 text-gray-400 font-medium">Attendee Wallet</th>
                   <th className="text-left py-3 px-4 text-gray-400 font-medium">Event</th>
                   <th className="text-left py-3 px-4 text-gray-400 font-medium">Purchase Date</th>
                   <th className="text-left py-3 px-4 text-gray-400 font-medium">Check-in Status</th>
@@ -318,24 +266,26 @@ export function AttendeeManagement({ setActiveSection, eventId }: AttendeeManage
                 {filteredAttendees.map((attendee) => (
                   <tr key={attendee.id} className="border-b border-gray-800 hover:bg-gray-800/30">
                     <td className="py-4 px-4">
-                    <Checkbox
-  checked={selectedAttendees.includes(attendee.id)}
-  onCheckedChange={() => handleCheckboxChange(attendee.id)}
-/>
-<span className="text-white ml-2">{eventTitleMap.get(attendee.eventId)}</span>
-                  
+                      <Checkbox
+                        checked={selectedAttendees.includes(attendee.id)}
+                        onCheckedChange={() => handleCheckboxChange(attendee.id)}
+                      />
                     </td>
-                    <td className="py-4 px-4">
-                      <span className="text-white">{new Date(attendee.createdAt).toLocaleDateString()}</span>
+                    <td className="py-4 px-4 font-mono text-sm text-gray-300">
+                      {attendee.buyerWallet}
+                    </td>
+                    <td className="py-4 px-4 text-white">
+                      {eventTitleMap.get(attendee.eventId) || 'Unknown Event'}
+                    </td>
+                    <td className="py-4 px-4 text-white">
+                      {new Date(attendee.createdAt).toLocaleDateString()}
                     </td>
                     <td className="py-4 px-4">
                       <div className="space-y-1">
                         <Badge className={getStatusColor(attendee.checkInStatus || "not-checked-in")}>
-                          {attendee.checkInStatus === "checked-in"
-                            ? "Checked In"
-                            : attendee.checkInStatus === "not-checked-in"
-                            ? "Not Checked In"
-                            : "No Show"}
+                          {attendee.checkInStatus === "checked-in" ? "Checked In"
+                           : attendee.checkInStatus === "no-show" ? "No Show"
+                           : "Not Checked In"}
                         </Badge>
                         {attendee.checkInTime && <p className="text-xs text-gray-400">{new Date(attendee.checkInTime).toLocaleTimeString()}</p>}
                       </div>
@@ -344,18 +294,16 @@ export function AttendeeManagement({ setActiveSection, eventId }: AttendeeManage
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
-                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                              <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                            </svg>
+                             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                               <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                             </svg>
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent className="bg-gray-800 border-gray-700">
                           <DropdownMenuItem className="text-white hover:bg-gray-700">View Details</DropdownMenuItem>
-                          <DropdownMenuItem className="text-white hover:bg-gray-700">Send Message</DropdownMenuItem>
-                          <DropdownMenuItem className="text-white hover:bg-gray-700">
-                            {attendee.checkInStatus === "checked-in" ? "Undo Check-in" : "Check In"}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="text-white hover:bg-gray-700">Resend Ticket</DropdownMenuItem>
+                           <DropdownMenuItem className="text-white hover:bg-gray-700">
+                             {attendee.checkInStatus === "checked-in" ? "Undo Check-in" : "Check In"}
+                           </DropdownMenuItem>
                           <DropdownMenuItem className="text-red-400 hover:bg-red-500/10">Remove</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -367,6 +315,7 @@ export function AttendeeManagement({ setActiveSection, eventId }: AttendeeManage
           </div>
         </CardContent>
       </Card>
+      
       {filteredAttendees.length === 0 && (
         <Card className="bg-gray-900/50 border-gray-800 backdrop-blur-sm">
           <CardContent className="p-12 text-center">
@@ -375,7 +324,7 @@ export function AttendeeManagement({ setActiveSection, eventId }: AttendeeManage
             <p className="text-gray-400">
               {searchTerm || eventFilter !== "all" || statusFilter !== "all"
                 ? "Try adjusting your search or filter criteria."
-                : "No attendees have registered for your events yet."}
+                : "No attendees have registered for this event yet."}
             </p>
           </CardContent>
         </Card>
