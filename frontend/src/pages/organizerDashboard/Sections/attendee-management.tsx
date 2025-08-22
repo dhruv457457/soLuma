@@ -3,6 +3,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 import { useSolanaWallet } from "@web3auth/modal/react/solana";
 import { Card, CardContent, CardHeader, CardTitle } from "../../../ui/card";
 import { Button } from "../../../ui/button";
@@ -19,7 +20,11 @@ interface AttendeeManagementProps {
   eventId: string | null;
 }
 
-export function AttendeeManagement({ setActiveSection, eventId }: AttendeeManagementProps) {
+export function AttendeeManagement({ setActiveSection, eventId: propEventId }: AttendeeManagementProps) {
+  const params = useParams();
+  const urlEventId = params.eventId || null;
+  // Use the eventId from URL params if available, otherwise fall back to props
+  const eventId = urlEventId || propEventId;
   const { accounts } = useSolanaWallet();
   const organizerWallet = accounts?.[0] || "";
   const isConnected = !!organizerWallet;

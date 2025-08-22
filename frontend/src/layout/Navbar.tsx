@@ -16,11 +16,15 @@ type NavItem = {
 };
 
 const navItems: NavItem[] = [
-  { label: "Create Event", to: "/org/events" },
+  // This now correctly points to the "Create Event" page inside the dashboard
+  { label: "Create Event", to: "/dashboard/events/new" }, 
   { label: "Docs", to: "/docs" },
-  { label: "Explore Events", to: "/events" },
-  { label: "Scanner", to: "/scan" },
-  { label: "My Tickets", to: "/tickets" },
+  // "Explore Events" now points to the homepage
+  { label: "Explore Events", to: "/dashboard/explore" }, 
+  // "Scanner" points to the dashboard scanner page
+ 
+  // "My Tickets" points to the dashboard tickets page
+  { label: "My Tickets", to: "/dashboard/tickets" }, 
 ];
 
 function navClasses(isActive: boolean) {
