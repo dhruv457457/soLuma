@@ -1,9 +1,10 @@
+// src/lib/dashboard.ts
 import { collection, query, where, getDocs, onSnapshot, orderBy } from "firebase/firestore";
 import { db } from "../config/firebase";
 import type { EventDoc, OrderDoc } from "../types/ticketing";
 
 // Helper function to convert lamports to a more readable format
-const convertLamportsToDisplay = (lamports: number, currency: string) => {
+const convertLamportsToDisplay = (lamports, currency) => {
   if (currency === "SOL") {
     return (lamports / 1e9).toFixed(4);
   }
@@ -16,16 +17,16 @@ const convertLamportsToDisplay = (lamports: number, currency: string) => {
 /**
  * Fetches events created by a specific user.
  */
-export async function getOrganizerEvents(createdBy: string): Promise<EventDoc[]> {
+export async function getOrganizerEvents(createdBy) {
   const q = query(collection(db, "events"), where("createdBy", "==", createdBy));
   const snap = await getDocs(q);
-  return snap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as EventDoc[];
+  return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 }
 
 /**
  * Calculates dashboard statistics (one-time fetch).
  */
-export async function getDashboardStats(events: EventDoc[]) {
+export async function getDashboardStats(events) {
   if (events.length === 0) {
     return {
       totalRevenue: { SOL: 0, USDC: 0 },
@@ -45,7 +46,7 @@ export async function getDashboardStats(events: EventDoc[]) {
   let totalRevenueUSDC = 0;
 
   ordersSnap.docs.forEach(doc => {
-    const order = doc.data() as OrderDoc;
+    const order = doc.data();
     totalTicketsSold += order.qty;
     if (order.currency === "SOL") {
       totalRevenueSOL += order.amountLamports;
@@ -64,7 +65,7 @@ export async function getDashboardStats(events: EventDoc[]) {
 /**
  * Subscribes to real-time updates for recent paid orders.
  */
-export function subscribeToRecentActivity(eventIds: string[], onUpdate: (orders: OrderDoc[]) => void) {
+export function subscribeToRecentActivity(eventIds, onUpdate) {
   if (eventIds.length === 0) return () => {};
 
   const q = query(
@@ -75,9 +76,52 @@ export function subscribeToRecentActivity(eventIds: string[], onUpdate: (orders:
   );
 
   const unsubscribe = onSnapshot(q, (snapshot) => {
-    const orders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as OrderDoc[];
+    const orders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     onUpdate(orders);
   });
 
   return unsubscribe;
+}
+
+/**
+ * Subscribes to real-time updates for all orders (attendees) for a list of event IDs.
+ * Returns an unsubscribe function to clean up the listener.
+ */
+export function subscribeToOrganizerAttendees(eventIds, onUpdate) {
+  if (eventIds.length === 0) {
+    onUpdate([]);
+    return () => {}; // Return a no-op unsubscribe function
+  }
+
+  const q = query(
+    collection(db, "orders"),
+    where("eventId", "in", eventIds),
+    orderBy("createdAt", "desc")
+  );
+
+  const unsubscribe = onSnapshot(q, (snapshot) => {
+    const attendees = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    onUpdate(attendees);
+  });
+
+  return unsubscribe;
+}
+
+/**
+ * Fetches all orders (attendees) for a list of event IDs.
+ * (This function is now redundant for the dashboard and can be used for one-time fetches if needed elsewhere).
+ */
+export async function getOrganizerAttendees(eventIds) {
+  if (eventIds.length === 0) {
+    return [];
+  }
+
+  const q = query(
+    collection(db, "orders"),
+    where("eventId", "in", eventIds),
+    orderBy("createdAt", "desc")
+  );
+
+  const querySnapshot = await getDocs(q);
+  return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 }

@@ -8,10 +8,11 @@ import { useWeb3Auth, useWeb3AuthConnect } from "@web3auth/modal/react";
 import { Menu } from "lucide-react";
 import { OrganizerSidebar } from "./Sections/organizer-sidebar";
 import { DashboardOverview } from "./Sections/dashboard-overview";
-import { CreateEvent } from "./Sections/create-event";
+import CreateEvent from "./Sections/create-event";
 import { MyEvents } from "./Sections/my-events";
-import { TicketManagement } from "./Sections/ticket-management";
-import { Analytics } from "./Sections/analytics";
+import MyTickets from "./Sections/MyTickets";
+import Scanner from "./Sections/Scanner";
+import EventsList from "./Sections/EventsList";
 import { AttendeeManagement } from "./Sections/attendee-management";
 import { Revenue } from "./Sections/revenue";
 import { Settings } from "./Sections/settings";
@@ -21,6 +22,7 @@ import logo from "/logo.png";
 export default function OrganizerDashboard() {
   const [activeSection, setActiveSection] = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
 
   // Get the Web3Auth instance and connection state
   const { accounts } = useSolanaWallet();
@@ -29,17 +31,24 @@ export default function OrganizerDashboard() {
   const renderContent = () => {
     switch (activeSection) {
       case "dashboard":
-        return <DashboardOverview />; // Now calls hook internally
+        return <DashboardOverview />;
       case "create-event":
         return <CreateEvent />;
+      case "events-list":
+        return <EventsList />;
       case "my-events":
-        return <MyEvents />;
-      case "ticket-management":
-        return <TicketManagement />;
-      case "analytics":
-        return <Analytics />;
+        // Pass the setActiveSection prop and capture the eventId
+        return <MyEvents setActiveSection={(section, eventId) => {
+          setActiveSection(section);
+          setSelectedEventId(eventId || null);
+        }} />;
+      case "my-tickets":
+        return <MyTickets />;
+      case "scanner":
+        return <Scanner />;
       case "attendee-management":
-        return <AttendeeManagement />;
+        // Pass the captured eventId to the component
+        return <AttendeeManagement setActiveSection={setActiveSection} eventId={selectedEventId} />;
       case "revenue":
         return <Revenue />;
       case "settings":

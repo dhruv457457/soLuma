@@ -1,267 +1,397 @@
-"use client"
+// src/pages/CreateEvent.tsx
+"use client";
 
-import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "../../../ui/card"
-import { Button } from "../../../ui/button"
-import { Input } from "../../../ui/input"
-import { Label } from "../../../ui/label"
-import { Textarea } from "../../../ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../ui/select"
-import { Switch } from "../../../ui/switch"
-import { Badge } from "../../../ui/badge"
+import type React from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { ensureFirebaseAuth, auth } from "../../../config/firebase";
+import { createEvent } from "../../../lib/events";
+import { useSolanaWallet } from "@web3auth/modal/react/solana";
+import { uploadImage } from "../../../lib/cloudinary";
+import {
+  Upload,
+  Calendar,
+  MapPin,
+  Users,
+  DollarSign,
+  Wallet,
+} from "lucide-react";
 
-export function CreateEvent() {
-  const [ticketTypes, setTicketTypes] = useState([{ id: 1, name: "General Admission", price: "50", quantity: "100" }])
+type Currency = "SOL" | "USDC";
 
-  const addTicketType = () => {
-    const newId = Math.max(...ticketTypes.map((t) => t.id)) + 1
-    setTicketTypes([...ticketTypes, { id: newId, name: "", price: "", quantity: "" }])
+const USDC_MINT_ADDRESS = "Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr";
+
+function toLamports(amount: number, currency: Currency) {
+  const decimals = currency === "SOL" ? 9 : 6;
+  return Math.round(amount * Math.pow(10, decimals));
+}
+
+function slugify(s: string) {
+  return s
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)+/g, "");
+}
+
+export default function CreateEventEnhanced() {
+  const { accounts } = useSolanaWallet();
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [venue, setVenue] = useState("");
+  const [startsAt, setStartsAt] = useState("");
+  const [endsAt, setEndsAt] = useState("");
+  const [currency, setCurrency] = useState<Currency>("SOL");
+  const [price, setPrice] = useState<string>("");
+  const [capacity, setCapacity] = useState<string>("100");
+  const [receiverWallet, setReceiverWallet] = useState<string>(
+    accounts?.[0] || ""
+  );
+  const [err, setErr] = useState<string | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  const createEventMutation = useMutation({
+    mutationFn: createEvent,
+    onSuccess: (id) => {
+      queryClient.invalidateQueries({ queryKey: ["events", "published"] });
+      navigate(`/e/${id}`);
+    },
+    onError: (e: any) => {
+      setErr(e?.message || "Failed to create event. Please try again.");
+    },
+  });
+
+  useEffect(() => {
+    ensureFirebaseAuth();
+  }, []);
+
+  useEffect(() => {
+    if (accounts?.[0]) {
+      setReceiverWallet(accounts[0]);
+    }
+  }, [accounts]);
+
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setLogoFile(file);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setLogoPreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setErr(null);
+
+    if (!title || !startsAt || !price || !receiverWallet) {
+      setErr("Please fill all required fields.");
+      return;
+    }
+
+    const priceNum = Number(price);
+    if (!Number.isFinite(priceNum) || priceNum <= 0) {
+      setErr("Price must be a positive number.");
+      return;
+    }
+
+    const capNum = Math.max(1, Number(capacity) || 0);
+
+    // --- CRITICAL CHANGE: Use the connected Solana wallet for 'createdBy' ---
+    const organizerWallet = accounts?.[0];
+    if (!organizerWallet) {
+        setErr("Please connect your wallet to create an event.");
+        return;
+    }
+
+    let bannerUrl = "";
+    if (logoFile) {
+      try {
+        setErr(null);
+        createEventMutation.reset();
+        
+        bannerUrl = await uploadImage(logoFile);
+      } catch (error: any) {
+        setErr(error.message || "Failed to upload image.");
+        return;
+      }
+    }
+
+    const newEvent = {
+      title,
+      slug: slugify(title),
+      description,
+      venue,
+      startsAt: new Date(startsAt).toISOString(),
+      endsAt: endsAt ? new Date(endsAt).toISOString() : null,
+      currency,
+      priceLamports: toLamports(priceNum, currency),
+      receiverWallet: receiverWallet.trim(),
+      capacity: capNum,
+      salesCount: 0,
+      status: "published",
+      bannerUrl,
+      createdBy: organizerWallet, // Use the Solana wallet address here
+      ...(currency === "USDC" ? { splToken: USDC_MINT_ADDRESS } : {}),
+    };
+
+    createEventMutation.mutate(newEvent);
   }
 
-  const removeTicketType = (id: number) => {
-    setTicketTypes(ticketTypes.filter((t) => t.id !== id))
-  }
+  const submitting = createEventMutation.isPending;
+
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
-            Create New Event
+    <>
+    <div className="min-h-screen bg-black p-4">
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-8 pt-8">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent mb-2">
+            Create Your Event
           </h1>
-          <p className="text-gray-400 mt-2">Set up your event details and ticket information.</p>
+          <p className="text-gray-400 text-lg">
+            Bring your community together on-chain.
+          </p>
         </div>
-        <div className="flex gap-3">
-          <Button variant="outline" className="border-gray-700 hover:bg-gray-800 bg-transparent">
-            Save Draft
-          </Button>
-          <Button className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600">
-            Publish Event
-          </Button>
-        </div>
-      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Main Form */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Basic Information */}
-          <Card className="bg-gray-900/50 border-gray-800 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="text-xl text-white">Basic Information</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="event-name" className="text-gray-300">
-                  Event Name
-                </Label>
-                <Input
-                  id="event-name"
-                  placeholder="Enter event name"
-                  className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-500"
+        <div className="grid lg:grid-cols-3 gap-8">
+          {/* Logo Upload Section */}
+          <div className="lg:col-span-1">
+            <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-800/50 rounded-2xl p-6 h-fit sticky top-24">
+              <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+                <Upload className="w-5 h-5 text-cyan-400" />
+                Event Logo
+              </h3>
+
+              <div className="relative">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleLogoUpload}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                 />
-              </div>
-              <div>
-                <Label htmlFor="event-description" className="text-gray-300">
-                  Description
-                </Label>
-                <Textarea
-                  id="event-description"
-                  placeholder="Describe your event..."
-                  rows={4}
-                  className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-500"
-                />
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="event-date" className="text-gray-300">
-                    Event Date
-                  </Label>
-                  <Input id="event-date" type="date" className="bg-gray-800 border-gray-700 text-white" />
-                </div>
-                <div>
-                  <Label htmlFor="event-time" className="text-gray-300">
-                    Event Time
-                  </Label>
-                  <Input id="event-time" type="time" className="bg-gray-800 border-gray-700 text-white" />
+                <div className="aspect-square rounded-xl border-2 border-dashed border-gray-700 hover:border-cyan-400 transition-colors duration-300 flex items-center justify-center bg-black overflow-hidden">
+                  {logoPreview ? (
+                    <img
+                      src={logoPreview || "/placeholder.svg"}
+                      alt="Logo preview"
+                      className="w-full h-full object-cover rounded-xl"
+                    />
+                  ) : (
+                    <div className="text-center">
+                      <Upload className="w-12 h-12 text-gray-600 mx-auto mb-2" />
+                      <p className="text-gray-400 text-sm">
+                        Click to upload logo
+                      </p>
+                      <p className="text-gray-500 text-xs mt-1">
+                        PNG, JPG up to 10MB
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
-              <div>
-                <Label htmlFor="event-location" className="text-gray-300">
-                  Location
-                </Label>
-                <Input
-                  id="event-location"
-                  placeholder="Event venue or online link"
-                  className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-500"
-                />
-              </div>
-            </CardContent>
-          </Card>
 
-          {/* Ticket Types */}
-          <Card className="bg-gray-900/50 border-gray-800 backdrop-blur-sm">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-xl text-white">Ticket Types</CardTitle>
-              <Button onClick={addTicketType} size="sm" className="bg-cyan-500 hover:bg-cyan-600">
-                Add Ticket Type
-              </Button>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {ticketTypes.map((ticket, index) => (
-                <div key={ticket.id} className="p-4 border border-gray-700 rounded-lg space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-white font-medium">Ticket Type {index + 1}</h4>
-                    {ticketTypes.length > 1 && (
-                      <Button
-                        onClick={() => removeTicketType(ticket.id)}
-                        size="sm"
-                        variant="outline"
-                        className="border-red-500 text-red-400 hover:bg-red-500/10"
-                      >
-                        Remove
-                      </Button>
+              <div className="mt-6 p-4 bg-gray-900 rounded-xl border border-gray-800/50">
+                <h4 className="text-sm font-medium text-purple-400 mb-2">
+                  Pro Tips
+                </h4>
+                <ul className="text-xs text-gray-400 space-y-1">
+                  <li>• Use square images (1:1 ratio)</li>
+                  <li>• Minimum 400x400 pixels</li>
+                  <li>• Keep text readable at small sizes</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* Form Section */}
+          <div className="lg:col-span-2">
+            <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-800/50 rounded-2xl p-8">
+              {err && (
+                <div className="bg-red-900/50 border border-red-500/20 text-red-400 p-4 rounded-xl mb-6 flex items-center gap-3">
+                  <div className="w-2 h-2 bg-red-500 rounded-full animate-ping"></div>
+                  {err}
+                </div>
+              )}
+
+              <form onSubmit={onSubmit} className="space-y-6">
+                {/* Event Title */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Event Title*
+                  </label>
+                  <input
+                    className="w-full bg-black border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 transition-all duration-300"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="Solana Summer Meetup"
+                    required
+                  />
+                </div>
+
+                {/* Description */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Description
+                  </label>
+                  <textarea
+                    className="w-full bg-black border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 transition-all duration-300 resize-none"
+                    rows={4}
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Share the details of your event..."
+                  />
+                </div>
+
+                {/* Date & Time Row */}
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
+                      <Calendar className="w-4 h-4 text-cyan-400" />
+                      Starts At*
+                    </label>
+                    <input
+                      type="datetime-local"
+                      className="w-full bg-black border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 transition-all duration-300"
+                      value={startsAt}
+                      onChange={(e) => setStartsAt(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
+                      <Calendar className="w-4 h-4 text-purple-400" />
+                      Ends At
+                    </label>
+                    <input
+                      type="datetime-local"
+                      className="w-full bg-black border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 transition-all duration-300"
+                      value={endsAt}
+                      onChange={(e) => setEndsAt(e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Venue */}
+                <div>
+                  <label className="text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
+                    <MapPin className="w-4 h-4 text-orange-400" />
+                    Venue
+                  </label>
+                  <input
+                    className="w-full bg-black border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:border-orange-400 focus:ring-2 focus:ring-orange-400/20 transition-all duration-300"
+                    value={venue}
+                    onChange={(e) => setVenue(e.target.value)}
+                    placeholder="123 Main St, City or Virtual Event Link"
+                  />
+                </div>
+
+                {/* Pricing Row */}
+                <div className="grid md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Currency*
+                    </label>
+                    <select
+                      className="w-full bg-black border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 transition-all duration-300"
+                      value={currency}
+                      onChange={(e) => setCurrency(e.target.value as Currency)}
+                    >
+                      <option value="SOL">SOL</option>
+                      <option value="USDC">USDC</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
+                      <DollarSign className="w-4 h-4 text-green-400" />
+                      Price ({currency})*
+                    </label>
+                    <input
+                      type="number"
+                      step="0.000001"
+                      min="0.000001"
+                      className="w-full bg-black border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:border-green-400 focus:ring-2 focus:ring-green-400/20 transition-all duration-300"
+                      value={price}
+                      onChange={(e) => setPrice(e.target.value)}
+                      placeholder={currency === "SOL" ? "0.25" : "25"}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
+                      <Users className="w-4 h-4 text-blue-400" />
+                      Capacity*
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      className="w-full bg-black border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all duration-300"
+                      value={capacity}
+                      onChange={(e) => setCapacity(e.target.value)}
+                      placeholder="100"
+                    />
+                  </div>
+                </div>
+
+                {/* Receiver Wallet */}
+                <div>
+                  <label className="text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
+                    <Wallet className="w-4 h-4 text-purple-400" />
+                    Receiver Wallet*
+                  </label>
+                  <input
+                    className="w-full bg-black border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 transition-all duration-300 font-mono text-sm"
+                    value={receiverWallet}
+                    onChange={(e) => setReceiverWallet(e.target.value)}
+                    placeholder="Your Solana wallet address"
+                    required
+                  />
+                </div>
+
+                {/* Submit Button */}
+                <div className="relative inline-flex items-center justify-center w-full group ">
+                  <div
+                    className={`absolute transition-all duration-200 rounded-full -inset-px ${
+                      submitting
+                        ? "bg-gray-700"
+                        : "bg-gradient-to-r from-cyan-500 to-purple-500"
+                    }`}
+                  ></div>
+
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className={`relative cursor-pointer inline-flex items-center justify-center w-full py-3 text-lg font-semibold rounded-full transition-all duration-300 ${
+                      submitting
+                        ? "bg-gray-900 text-gray-400 cursor-not-allowed"
+                        : "text-white bg-black"
+                    }`}
+                  >
+                    {submitting ? (
+                      <div className="flex items-center justify-center gap-2">
+                        <div className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+                        Creating Event...
+                      </div>
+                    ) : (
+                      "Create Event"
                     )}
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div>
-                      <Label className="text-gray-300">Name</Label>
-                      <Input
-                        value={ticket.name}
-                        onChange={(e) => {
-                          const updated = ticketTypes.map((t) =>
-                            t.id === ticket.id ? { ...t, name: e.target.value } : t,
-                          )
-                          setTicketTypes(updated)
-                        }}
-                        placeholder="Ticket name"
-                        className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-500"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-gray-300">Price (SOL)</Label>
-                      <Input
-                        value={ticket.price}
-                        onChange={(e) => {
-                          const updated = ticketTypes.map((t) =>
-                            t.id === ticket.id ? { ...t, price: e.target.value } : t,
-                          )
-                          setTicketTypes(updated)
-                        }}
-                        placeholder="0.00"
-                        className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-500"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-gray-300">Quantity</Label>
-                      <Input
-                        value={ticket.quantity}
-                        onChange={(e) => {
-                          const updated = ticketTypes.map((t) =>
-                            t.id === ticket.id ? { ...t, quantity: e.target.value } : t,
-                          )
-                          setTicketTypes(updated)
-                        }}
-                        placeholder="100"
-                        className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-500"
-                      />
-                    </div>
-                  </div>
+                  </button>
                 </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          {/* Event Image */}
-          <Card className="bg-gray-900/50 border-gray-800 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="text-xl text-white">Event Image</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="border-2 border-dashed border-gray-700 rounded-lg p-8 text-center hover:border-cyan-500/50 transition-colors">
-                <div className="space-y-2">
-                  <div className="text-4xl">📸</div>
-                  <p className="text-gray-400">Click to upload event image</p>
-                  <p className="text-sm text-gray-500">PNG, JPG up to 10MB</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Settings Sidebar */}
-        <div className="space-y-6">
-          {/* Event Settings */}
-          <Card className="bg-gray-900/50 border-gray-800 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="text-xl text-white">Event Settings</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="event-category" className="text-gray-300">
-                  Category
-                </Label>
-                <Select>
-                  <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
-                    <SelectValue placeholder="Select category" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-gray-800 border-gray-700">
-                    <SelectItem value="conference">Conference</SelectItem>
-                    <SelectItem value="workshop">Workshop</SelectItem>
-                    <SelectItem value="networking">Networking</SelectItem>
-                    <SelectItem value="exhibition">Exhibition</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <Label htmlFor="public-event" className="text-gray-300">
-                  Public Event
-                </Label>
-                <Switch id="public-event" />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <Label htmlFor="allow-transfers" className="text-gray-300">
-                  Allow Ticket Transfers
-                </Label>
-                <Switch id="allow-transfers" />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <Label htmlFor="require-approval" className="text-gray-300">
-                  Require Approval
-                </Label>
-                <Switch id="require-approval" />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Preview */}
-          <Card className="bg-gray-900/50 border-gray-800 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="text-xl text-white">Preview</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div className="aspect-video bg-gray-800 rounded-lg flex items-center justify-center">
-                  <span className="text-gray-500">Event Image</span>
-                </div>
-                <h3 className="font-semibold text-white">Event Name</h3>
-                <p className="text-sm text-gray-400">Event description will appear here...</p>
-                <div className="flex items-center gap-2">
-                  <Badge variant="secondary" className="bg-cyan-500/20 text-cyan-400">
-                    Conference
-                  </Badge>
-                  <Badge variant="secondary" className="bg-green-500/20 text-green-400">
-                    Public
-                  </Badge>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </form>
+            </div>
+          </div>
         </div>
       </div>
     </div>
-  )
+    </>
+  );
 }

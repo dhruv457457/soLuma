@@ -1,134 +1,138 @@
-"use client"
+// src/pages/organizerDashboard/Sections/attendee-management.tsx
 
-import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "../../../ui/card"
-import { Button } from "../../../ui/button"
-import { Input } from "../../../ui/input"
-import { Badge } from "../../../ui/badge"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../ui/select"
-import { Checkbox } from "../../../ui/checkbox"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../../../ui/dropdown-menu"
-import { Avatar, AvatarFallback, AvatarImage } from "../../../ui/avatar"
+"use client";
 
-export function AttendeeManagement() {
-  const [searchTerm, setSearchTerm] = useState("")
-  const [eventFilter, setEventFilter] = useState("all")
-  const [statusFilter, setStatusFilter] = useState("all")
-  const [selectedAttendees, setSelectedAttendees] = useState<number[]>([])
+import { useEffect, useState } from "react";
+import { useSolanaWallet } from "@web3auth/modal/react/solana";
+import { Card, CardContent, CardHeader, CardTitle } from "../../../ui/card";
+import { Button } from "../../../ui/button";
+import { Input } from "../../../ui/input";
+import { Badge } from "../../../ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../ui/select";
+import { Checkbox } from "../../../ui/checkbox";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../../../ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "../../../ui/avatar";
+import { getOrganizerEvents, subscribeToOrganizerAttendees } from "../../../lib/dashboard";
+import type { OrderDoc, EventDoc } from "../../../types/ticketing";
 
-  const attendees = [
-    {
-      id: 1,
-      name: "John Doe",
-      email: "john@example.com",
-      event: "Web3 Conference 2024",
-      ticketType: "VIP",
-      purchaseDate: "Dec 10, 2024",
-      checkInStatus: "Checked In",
-      checkInTime: "9:30 AM",
-      walletAddress: "7xKX...9mNp",
-    },
-    {
-      id: 2,
-      name: "Jane Smith",
-      email: "jane@example.com",
-      event: "Web3 Conference 2024",
-      ticketType: "General",
-      purchaseDate: "Dec 9, 2024",
-      checkInStatus: "Not Checked In",
-      checkInTime: null,
-      walletAddress: "4bYz...2kLm",
-    },
-    {
-      id: 3,
-      name: "Mike Johnson",
-      email: "mike@example.com",
-      event: "Blockchain Workshop",
-      ticketType: "Standard",
-      purchaseDate: "Dec 8, 2024",
-      checkInStatus: "Checked In",
-      checkInTime: "2:15 PM",
-      walletAddress: "9pQr...5vWx",
-    },
-    {
-      id: 4,
-      name: "Sarah Wilson",
-      email: "sarah@example.com",
-      event: "Web3 Conference 2024",
-      ticketType: "General",
-      purchaseDate: "Dec 7, 2024",
-      checkInStatus: "No Show",
-      checkInTime: null,
-      walletAddress: "3nTy...8hGf",
-    },
-    {
-      id: 5,
-      name: "David Brown",
-      email: "david@example.com",
-      event: "NFT Art Exhibition",
-      ticketType: "Premium",
-      purchaseDate: "Dec 6, 2024",
-      checkInStatus: "Checked In",
-      checkInTime: "6:45 PM",
-      walletAddress: "6mUi...1cVb",
-    },
-  ]
+interface AttendeeManagementProps {
+  setActiveSection: (section: string) => void;
+  eventId: string | null;
+}
+
+export function AttendeeManagement({ setActiveSection, eventId }: AttendeeManagementProps) {
+  const { accounts } = useSolanaWallet();
+  const organizerWallet = accounts?.[0] || "";
+  const isConnected = !!organizerWallet;
+
+  const [searchTerm, setSearchTerm] = useState("");
+  const [eventFilter, setEventFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [selectedAttendees, setSelectedAttendees] = useState<string[]>([]);
+
+  const [attendees, setAttendees] = useState<OrderDoc[]>([]);
+  const [events, setEvents] = useState<EventDoc[]>([]);
+  const [dataLoading, setDataLoading] = useState(true);
+
+  // Map event IDs to event titles for display
+  const eventTitleMap = new Map(events.map(e => [e.id, e.title]));
+
+  useEffect(() => {
+    if (!isConnected || !organizerWallet) {
+      setDataLoading(false);
+      return;
+    }
+
+    let unsubscribe: () => void = () => {};
+
+    const fetchData = async () => {
+      setDataLoading(true);
+      try {
+        const fetchedEvents = await getOrganizerEvents(organizerWallet);
+        setEvents(fetchedEvents);
+
+        // Filter events by the specific eventId passed in props, if it exists
+        const eventIdsToSubscribe = eventId ? [eventId] : fetchedEvents.map(e => e.id);
+        
+        // Use the real-time subscription function
+        unsubscribe = subscribeToOrganizerAttendees(eventIdsToSubscribe, (fetchedAttendees) => {
+          setAttendees(fetchedAttendees);
+          setDataLoading(false);
+        });
+      } catch (e) {
+        console.error("Failed to fetch attendee data:", e);
+        setDataLoading(false);
+      }
+    };
+
+    fetchData();
+
+    // Cleanup function to unsubscribe from the real-time listener
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
+  }, [isConnected, organizerWallet, eventId]); // Added eventId to the dependency array
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "Checked In":
-        return "bg-green-500/20 text-green-400 border-green-500/30"
-      case "Not Checked In":
-        return "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
-      case "No Show":
-        return "bg-red-500/20 text-red-400 border-red-500/30"
+      case "checked-in":
+        return "bg-green-500/20 text-green-400 border-green-500/30";
+      case "not-checked-in":
+        return "bg-yellow-500/20 text-yellow-400 border-yellow-500/30";
+      case "no-show":
+        return "bg-red-500/20 text-red-400 border-red-500/30";
       default:
-        return "bg-gray-500/20 text-gray-400 border-gray-500/30"
+        return "bg-gray-500/20 text-gray-400 border-gray-500/30";
     }
-  }
+  };
 
-  const getTicketTypeColor = (type: string) => {
-    switch (type) {
-      case "VIP":
-        return "bg-purple-500/20 text-purple-400 border-purple-500/30"
-      case "Premium":
-        return "bg-blue-500/20 text-blue-400 border-blue-500/30"
-      default:
-        return "bg-gray-500/20 text-gray-400 border-gray-500/30"
+  const attendeesForEvent = attendees.filter(a => a.eventId === eventId);
+
+  const filteredAttendees = attendeesForEvent.filter((attendee) => {
+    if (!attendee || !attendee.buyerName || !attendee.buyerEmail) {
+      return false;
     }
-  }
-
-  const filteredAttendees = attendees.filter((attendee) => {
     const matchesSearch =
-      attendee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      attendee.email.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesEvent = eventFilter === "all" || attendee.event === eventFilter
+      attendee.buyerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      attendee.buyerEmail.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesEvent = eventFilter === "all" || attendee.eventId === eventFilter;
     const matchesStatus =
-      statusFilter === "all" || attendee.checkInStatus.toLowerCase().replace(" ", "-") === statusFilter
-    return matchesSearch && matchesEvent && matchesStatus
-  })
+      statusFilter === "all" || attendee.checkInStatus === statusFilter;
+    return matchesSearch && matchesEvent && matchesStatus;
+  });
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedAttendees(filteredAttendees.map((a) => a.id))
+      setSelectedAttendees(filteredAttendees.map((a) => a.id));
     } else {
-      setSelectedAttendees([])
+      setSelectedAttendees([]);
     }
-  }
+  };
 
-  const handleSelectAttendee = (id: number, checked: boolean) => {
+  const handleSelectAttendee = (id: string, checked: boolean) => {
     if (checked) {
-      setSelectedAttendees([...selectedAttendees, id])
+      setSelectedAttendees([...selectedAttendees, id]);
     } else {
-      setSelectedAttendees(selectedAttendees.filter((aid) => aid !== id))
+      setSelectedAttendees(selectedAttendees.filter((aid) => aid !== id));
     }
-  }
+  };
 
   const attendeeStats = {
-    total: attendees.length,
-    checkedIn: attendees.filter((a) => a.checkInStatus === "Checked In").length,
-    notCheckedIn: attendees.filter((a) => a.checkInStatus === "Not Checked In").length,
-    noShow: attendees.filter((a) => a.checkInStatus === "No Show").length,
+    total: attendeesForEvent.length,
+    checkedIn: attendeesForEvent.filter((a) => a.checkInStatus === "checked-in").length,
+    notCheckedIn: attendeesForEvent.filter((a) => a.checkInStatus === "not-checked-in").length,
+    noShow: attendeesForEvent.filter((a) => a.checkInStatus === "no-show").length,
+  };
+
+  if (dataLoading) {
+    return (
+      <div className="flex justify-center items-center h-screen text-gray-400">
+        <div className="w-8 h-8 border-2 border-gray-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+        <p>Loading attendees...</p>
+      </div>
+    );
   }
 
   return (
@@ -148,9 +152,15 @@ export function AttendeeManagement() {
           <Button className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600">
             Send Message
           </Button>
+          <Button
+            className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600"
+            onClick={() => setActiveSection("scanner")}
+          >
+            QR Code Scanner
+          </Button>
         </div>
       </div>
-
+      <hr className="border-gray-800" />
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card className="bg-gray-900/50 border-gray-800 backdrop-blur-sm">
@@ -198,7 +208,7 @@ export function AttendeeManagement() {
           </CardContent>
         </Card>
       </div>
-
+      <hr className="border-gray-800" />
       {/* Filters and Search */}
       <Card className="bg-gray-900/50 border-gray-800 backdrop-blur-sm">
         <CardContent className="p-6">
@@ -217,9 +227,11 @@ export function AttendeeManagement() {
               </SelectTrigger>
               <SelectContent className="bg-gray-800 border-gray-700">
                 <SelectItem value="all">All Events</SelectItem>
-                <SelectItem value="Web3 Conference 2024">Web3 Conference 2024</SelectItem>
-                <SelectItem value="Blockchain Workshop">Blockchain Workshop</SelectItem>
-                <SelectItem value="NFT Art Exhibition">NFT Art Exhibition</SelectItem>
+                {events.map((event) => (
+                  <SelectItem key={event.id} value={event.id}>
+                    {event.title}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -236,7 +248,6 @@ export function AttendeeManagement() {
           </div>
         </CardContent>
       </Card>
-
       {/* Bulk Actions */}
       {selectedAttendees.length > 0 && (
         <Card className="bg-cyan-500/10 border-cyan-500/30 backdrop-blur-sm">
@@ -272,7 +283,7 @@ export function AttendeeManagement() {
           </CardContent>
         </Card>
       )}
-
+      <hr className="border-gray-800" />
       {/* Attendees Table */}
       <Card className="bg-gray-900/50 border-gray-800 backdrop-blur-sm">
         <CardHeader>
@@ -291,7 +302,6 @@ export function AttendeeManagement() {
                   </th>
                   <th className="text-left py-3 px-4 text-gray-400 font-medium">Attendee</th>
                   <th className="text-left py-3 px-4 text-gray-400 font-medium">Event</th>
-                  <th className="text-left py-3 px-4 text-gray-400 font-medium">Ticket Type</th>
                   <th className="text-left py-3 px-4 text-gray-400 font-medium">Purchase Date</th>
                   <th className="text-left py-3 px-4 text-gray-400 font-medium">Check-in Status</th>
                   <th className="text-left py-3 px-4 text-gray-400 font-medium">Actions</th>
@@ -309,34 +319,37 @@ export function AttendeeManagement() {
                     <td className="py-4 px-4">
                       <div className="flex items-center gap-3">
                         <Avatar className="w-8 h-8">
-                          <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${attendee.name}`} />
+                          <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${attendee.buyerName}`} />
                           <AvatarFallback className="bg-gray-700 text-white text-xs">
-                            {attendee.name
+                            {attendee.buyerName
                               .split(" ")
                               .map((n) => n[0])
                               .join("")}
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <p className="text-white font-medium">{attendee.name}</p>
-                          <p className="text-sm text-gray-400">{attendee.email}</p>
-                          <p className="text-xs text-gray-500 font-mono">{attendee.walletAddress}</p>
+                          <p className="text-white font-medium">{attendee.buyerName}</p>
+                          <p className="text-sm text-gray-400">{attendee.buyerEmail}</p>
+                          <p className="text-xs text-gray-500 font-mono">{attendee.buyerWallet}</p>
                         </div>
                       </div>
                     </td>
                     <td className="py-4 px-4">
-                      <span className="text-white">{attendee.event}</span>
+                      <span className="text-white">{eventTitleMap.get(attendee.eventId)}</span>
                     </td>
                     <td className="py-4 px-4">
-                      <Badge className={getTicketTypeColor(attendee.ticketType)}>{attendee.ticketType}</Badge>
-                    </td>
-                    <td className="py-4 px-4">
-                      <span className="text-white">{attendee.purchaseDate}</span>
+                      <span className="text-white">{new Date(attendee.createdAt).toLocaleDateString()}</span>
                     </td>
                     <td className="py-4 px-4">
                       <div className="space-y-1">
-                        <Badge className={getStatusColor(attendee.checkInStatus)}>{attendee.checkInStatus}</Badge>
-                        {attendee.checkInTime && <p className="text-xs text-gray-400">{attendee.checkInTime}</p>}
+                        <Badge className={getStatusColor(attendee.checkInStatus)}>
+                          {attendee.checkInStatus === "checked-in"
+                            ? "Checked In"
+                            : attendee.checkInStatus === "not-checked-in"
+                            ? "Not Checked In"
+                            : "No Show"}
+                        </Badge>
+                        {attendee.checkInTime && <p className="text-xs text-gray-400">{new Date(attendee.checkInTime).toLocaleTimeString()}</p>}
                       </div>
                     </td>
                     <td className="py-4 px-4">
@@ -352,7 +365,7 @@ export function AttendeeManagement() {
                           <DropdownMenuItem className="text-white hover:bg-gray-700">View Details</DropdownMenuItem>
                           <DropdownMenuItem className="text-white hover:bg-gray-700">Send Message</DropdownMenuItem>
                           <DropdownMenuItem className="text-white hover:bg-gray-700">
-                            {attendee.checkInStatus === "Checked In" ? "Undo Check-in" : "Check In"}
+                            {attendee.checkInStatus === "checked-in" ? "Undo Check-in" : "Check In"}
                           </DropdownMenuItem>
                           <DropdownMenuItem className="text-white hover:bg-gray-700">Resend Ticket</DropdownMenuItem>
                           <DropdownMenuItem className="text-red-400 hover:bg-red-500/10">Remove</DropdownMenuItem>
@@ -366,7 +379,6 @@ export function AttendeeManagement() {
           </div>
         </CardContent>
       </Card>
-
       {filteredAttendees.length === 0 && (
         <Card className="bg-gray-900/50 border-gray-800 backdrop-blur-sm">
           <CardContent className="p-12 text-center">
@@ -381,5 +393,5 @@ export function AttendeeManagement() {
         </Card>
       )}
     </div>
-  )
+  );
 }

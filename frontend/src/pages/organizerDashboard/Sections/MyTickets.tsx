@@ -1,10 +1,11 @@
+"use client"
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useSolanaWallet } from "@web3auth/modal/react/solana";
-import { getMyTickets } from "../lib/tickets";
-import { getEvent } from "../lib/events";
-import { ensureFirebaseAuth } from "../config/firebase";
-import type { EventDoc, TicketDoc } from "../types/ticketing";
+import { getMyTickets } from "../../../lib/tickets";
+import { getEvent } from "../../../lib/events";
+import { ensureFirebaseAuth } from "../../../config/firebase";
+import type { EventDoc, TicketDoc } from "../../../types/ticketing";
 
 function TicketRow({ ticket, event }: { ticket: TicketDoc; event: EventDoc | null }) {
   if (!event) return null;

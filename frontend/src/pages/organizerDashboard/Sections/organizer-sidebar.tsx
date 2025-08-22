@@ -11,6 +11,7 @@ import {
   Settings,
   User,
   X,
+  QrCode,
 } from "lucide-react"
 import { cn } from "../../../utils/utils"
 import logo from "/logo.png"
@@ -23,15 +24,15 @@ interface OrganizerSidebarProps {
 }
 
 const sidebarItems = [
-  { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { id: "profile", label: "Profile", icon: User },
+  { id: "my-tickets", label: "My Tickets", icon: Ticket },
+  { id: "events-list", label: "Explore Events", icon: Calendar },
   { id: "create-event", label: "Create Event", icon: PlusCircle },
+  { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { id: "my-events", label: "My Events", icon: Calendar },
-  { id: "ticket-management", label: "Ticket Management", icon: Ticket },
-  { id: "analytics", label: "Analytics", icon: BarChart2 },
-  { id: "attendee-management", label: "Attendee Management", icon: Users },
+ 
   { id: "revenue", label: "Revenue", icon: Wallet },
   { id: "settings", label: "Settings", icon: Settings },
-  { id: "profile", label: "Profile", icon: User },
 ]
 
 // Reusable Brand Component to ensure consistency
