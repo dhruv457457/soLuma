@@ -51,7 +51,7 @@ export function MyEvents({ setActiveSection }: MyEventsProps) {
       try {
         setDataLoading(true);
         const fetchedEvents = await getOrganizerEvents(organizerWallet);
-        setEvents(fetchedEvents);
+        setEvents(fetchedEvents as EventDoc[]);
       } catch (e) {
         console.error("Failed to fetch events:", e);
       } finally {
@@ -151,14 +151,7 @@ export function MyEvents({ setActiveSection }: MyEventsProps) {
                     {event.title}
                   </CardTitle>
                   <div className="flex items-center gap-2 mb-2">
-                    {event.category && (
-                      <Badge
-                        variant="secondary"
-                        className="bg-gray-700 text-gray-300"
-                      >
-                        {event.category}
-                      </Badge>
-                    )}
+                 
                     <Badge className={getStatusColor(event.status)}>
                       {event.status === "published"
                         ? "Active"
@@ -209,7 +202,7 @@ export function MyEvents({ setActiveSection }: MyEventsProps) {
                 </div>
                 <div className="flex items-center text-gray-400">
                   <span className="mr-2">📍</span>
-                  {event.location}
+              =
                 </div>
               </div>
               <div className="space-y-2">

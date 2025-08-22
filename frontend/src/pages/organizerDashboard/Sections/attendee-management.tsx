@@ -30,6 +30,14 @@ export function AttendeeManagement({ setActiveSection, eventId }: AttendeeManage
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedAttendees, setSelectedAttendees] = useState<string[]>([]);
 
+  const handleCheckboxChange = (attendeeId: string) => {
+    setSelectedAttendees(prev => 
+      prev.includes(attendeeId)
+        ? prev.filter(id => id !== attendeeId)  // Remove if already selected
+        : [...prev, attendeeId]  // Add if not selected
+    );
+  };
+
   const [attendees, setAttendees] = useState<OrderDoc[]>([]);
   const [events, setEvents] = useState<EventDoc[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
@@ -49,7 +57,7 @@ export function AttendeeManagement({ setActiveSection, eventId }: AttendeeManage
       setDataLoading(true);
       try {
         const fetchedEvents = await getOrganizerEvents(organizerWallet);
-        setEvents(fetchedEvents);
+        setEvents(fetchedEvents as EventDoc[]);
 
         // Filter events by the specific eventId passed in props, if it exists
         const eventIdsToSubscribe = eventId ? [eventId] : fetchedEvents.map(e => e.id);
@@ -91,12 +99,11 @@ export function AttendeeManagement({ setActiveSection, eventId }: AttendeeManage
   const attendeesForEvent = attendees.filter(a => a.eventId === eventId);
 
   const filteredAttendees = attendeesForEvent.filter((attendee) => {
-    if (!attendee || !attendee.buyerName || !attendee.buyerEmail) {
+    if (!attendee || !attendee.buyerWallet) {
       return false;
     }
-    const matchesSearch =
-      attendee.buyerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      attendee.buyerEmail.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = 
+      attendee.buyerWallet.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesEvent = eventFilter === "all" || attendee.eventId === eventFilter;
     const matchesStatus =
       statusFilter === "all" || attendee.checkInStatus === statusFilter;
@@ -311,38 +318,19 @@ export function AttendeeManagement({ setActiveSection, eventId }: AttendeeManage
                 {filteredAttendees.map((attendee) => (
                   <tr key={attendee.id} className="border-b border-gray-800 hover:bg-gray-800/30">
                     <td className="py-4 px-4">
-                      <Checkbox
-                        checked={selectedAttendees.includes(attendee.id)}
-                        onCheckedChange={(checked) => handleSelectAttendee(attendee.id, checked as boolean)}
-                      />
-                    </td>
-                    <td className="py-4 px-4">
-                      <div className="flex items-center gap-3">
-                        <Avatar className="w-8 h-8">
-                          <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${attendee.buyerName}`} />
-                          <AvatarFallback className="bg-gray-700 text-white text-xs">
-                            {attendee.buyerName
-                              .split(" ")
-                              .map((n) => n[0])
-                              .join("")}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="text-white font-medium">{attendee.buyerName}</p>
-                          <p className="text-sm text-gray-400">{attendee.buyerEmail}</p>
-                          <p className="text-xs text-gray-500 font-mono">{attendee.buyerWallet}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="py-4 px-4">
-                      <span className="text-white">{eventTitleMap.get(attendee.eventId)}</span>
+                    <Checkbox
+  checked={selectedAttendees.includes(attendee.id)}
+  onCheckedChange={() => handleCheckboxChange(attendee.id)}
+/>
+<span className="text-white ml-2">{eventTitleMap.get(attendee.eventId)}</span>
+                  
                     </td>
                     <td className="py-4 px-4">
                       <span className="text-white">{new Date(attendee.createdAt).toLocaleDateString()}</span>
                     </td>
                     <td className="py-4 px-4">
                       <div className="space-y-1">
-                        <Badge className={getStatusColor(attendee.checkInStatus)}>
+                        <Badge className={getStatusColor(attendee.checkInStatus || "not-checked-in")}>
                           {attendee.checkInStatus === "checked-in"
                             ? "Checked In"
                             : attendee.checkInStatus === "not-checked-in"

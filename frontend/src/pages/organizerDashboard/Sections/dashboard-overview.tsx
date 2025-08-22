@@ -66,9 +66,9 @@ export function DashboardOverview() {
     async function fetchData() {
       try {
         const orgEvents = await getOrganizerEvents(organizerWallet);
-        setEvents(orgEvents);
+        setEvents(orgEvents as EventDoc[]);
 
-        const fetchedStats = await getDashboardStats(orgEvents);
+        const fetchedStats = await getDashboardStats(orgEvents as EventDoc[]);
         setStats(fetchedStats);
         
       } catch (e) {
