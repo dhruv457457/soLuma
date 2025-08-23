@@ -3,7 +3,7 @@
 
 import type React from "react";
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useOutletContext } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ensureFirebaseAuth, auth } from "../../../config/firebase";
 import { createEvent } from "../../../lib/events";
@@ -36,6 +36,7 @@ function slugify(s: string) {
 }
 
 export default function CreateEventEnhanced() {
+  const { handleEventCreated } = useOutletContext() as { handleEventCreated: () => void };
   const { accounts } = useSolanaWallet();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -59,6 +60,7 @@ export default function CreateEventEnhanced() {
     mutationFn: createEvent,
     onSuccess: (id) => {
       queryClient.invalidateQueries({ queryKey: ["events", "published"] });
+      handleEventCreated(); // This will update the state in the layout
       navigate(`/e/${id}`);
     },
     onError: (e: any) => {
@@ -105,7 +107,6 @@ export default function CreateEventEnhanced() {
 
     const capNum = Math.max(1, Number(capacity) || 0);
 
-    // --- CRITICAL CHANGE: Use the connected Solana wallet for 'createdBy' ---
     const organizerWallet = accounts?.[0];
     if (!organizerWallet) {
         setErr("Please connect your wallet to create an event.");
@@ -139,7 +140,7 @@ export default function CreateEventEnhanced() {
       salesCount: 0,
       status: "published",
       bannerUrl,
-      createdBy: organizerWallet, // Use the Solana wallet address here
+      createdBy: organizerWallet,
       ...(currency === "USDC" ? { splToken: USDC_MINT_ADDRESS } : {}),
     };
 
@@ -147,7 +148,6 @@ export default function CreateEventEnhanced() {
   }
 
   const submitting = createEventMutation.isPending;
-
   return (
     <>
     <div className="min-h-screen bg-black p-4">

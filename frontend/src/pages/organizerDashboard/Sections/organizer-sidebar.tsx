@@ -13,18 +13,19 @@ import logo from "/logo.png";
 interface OrganizerSidebarProps {
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
+  isOrganizer: boolean;
 }
 
-const sidebarItems = [
-  { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, to: "/dashboard" },
-  { id: "profile", label: "Profile", icon: User, to: "/dashboard/profile" },
-  { id: "my-tickets", label: "My Tickets", icon: Ticket, to: "/dashboard/tickets" },
-  { id: "explore", label: "Explore Events", icon: Calendar, to: "/dashboard/explore" },
-  { id: "my-events", label: "My Events", icon: Calendar, to: "/dashboard/events" },
-  { id: "create-event", label: "Create Event", icon: PlusCircle, to: "/dashboard/events/new" },
-  { id: "scanner", label: "Scanner", icon: QrCode, to: "/dashboard/scanner" },
-  { id: "revenue", label: "Revenue", icon: Wallet, to: "/dashboard/revenue" },
-  { id: "settings", label: "Settings", icon: Settings, to: "/dashboard/settings" },
+const allSidebarItems = [
+  { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, to: "/dashboard", organizerOnly: false },
+  { id: "profile", label: "Profile", icon: User, to: "/dashboard/profile", organizerOnly: false },
+  { id: "my-tickets", label: "My Tickets", icon: Ticket, to: "/dashboard/tickets", organizerOnly: false },
+  { id: "explore", label: "Explore Events", icon: Calendar, to: "/dashboard/explore", organizerOnly: false },
+  { id: "my-events", label: "My Events", icon: Calendar, to: "/dashboard/events", organizerOnly: true },
+  { id: "create-event", label: "Create Event", icon: PlusCircle, to: "/dashboard/events/new", organizerOnly: false },
+  { id: "scanner", label: "Scanner", icon: QrCode, to: "/dashboard/scanner", organizerOnly: true },
+  { id: "revenue", label: "Revenue", icon: Wallet, to: "/dashboard/revenue", organizerOnly: true },
+  { id: "settings", label: "Settings", icon: Settings, to: "/dashboard/settings", organizerOnly: true },
 ];
 
 const BrandLogo = ({ className = "" }: { className?: string }) => (
@@ -37,7 +38,9 @@ const BrandLogo = ({ className = "" }: { className?: string }) => (
   </a>
 );
 
-export function OrganizerSidebar({ sidebarOpen, setSidebarOpen }: OrganizerSidebarProps) {
+export function OrganizerSidebar({ sidebarOpen, setSidebarOpen, isOrganizer }: OrganizerSidebarProps) {
+    const sidebarItems = allSidebarItems.filter(item => !item.organizerOnly || isOrganizer);
+
   const NavItem = ({ item, isMobile = false }: { item: typeof sidebarItems[0], isMobile?: boolean }) => (
     <NavLink
       to={item.to}
