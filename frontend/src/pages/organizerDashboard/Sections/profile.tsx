@@ -37,45 +37,20 @@ import type { EventDoc, OrderDoc } from "../../../types/ticketing";
 import { ensureFirebaseAuth } from "../../../config/firebase";
 
 // QR Code Component
-function WalletQRCode({ walletAddress, isConnected }) {
-  const [qrCodeData, setQrCodeData] = useState("");
+interface WalletQRCodeProps {
+  walletAddress: string;
+  isConnected: boolean;
+}
 
-  useEffect(() => {
-    if (walletAddress) {
-      // Generate QR code data URL for the wallet address
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      canvas.width = 200;
-      canvas.height = 200;
-      
-      // Simple QR code placeholder pattern (in real app, use a QR library)
-      ctx.fillStyle = isConnected ? '#000000' : '#999999';
-      
-      // Create a grid pattern to simulate QR code
-      const gridSize = 10;
-      for (let i = 0; i < 20; i++) {
-        for (let j = 0; j < 20; j++) {
-          if (Math.random() > 0.5) {
-            ctx.fillRect(i * gridSize, j * gridSize, gridSize, gridSize);
-          }
-        }
-      }
-      
-      // Convert to data URL
-      setQrCodeData(canvas.toDataURL());
-    }
-  }, [walletAddress, isConnected]);
-
+function WalletQRCode({ walletAddress, isConnected }: WalletQRCodeProps) {
+  // Canvas and DOM APIs are not available in SSR/deployment environments.
+  // Replace with a static placeholder or use a QR code library that supports SSR if needed.
   return (
     <div className="relative">
       <div className={`bg-white p-4 rounded-lg ${!isConnected ? 'blur-sm' : ''}`}>
-        {qrCodeData ? (
-          <img src={qrCodeData} alt="Wallet QR Code" className="w-48 h-48 mx-auto" />
-        ) : (
-          <div className="w-48 h-48 bg-gray-100 flex items-center justify-center rounded">
-            <QrCode className="w-16 h-16 text-gray-400" />
-          </div>
-        )}
+        <div className="w-48 h-48 bg-gray-100 flex items-center justify-center rounded">
+          <QrCode className="w-16 h-16 text-gray-400" />
+        </div>
       </div>
       {!isConnected && (
         <div className="absolute inset-0 flex items-center justify-center">
@@ -90,9 +65,9 @@ function WalletQRCode({ walletAddress, isConnected }) {
 
 // Copy to clipboard hook
 function useCopyToClipboard() {
-  const [isCopied, setIsCopied] = useState(false);
+  const [isCopied, setIsCopied] = useState<boolean>(false);
 
-  const copyToClipboard = async (text) => {
+  const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
       setIsCopied(true);
@@ -106,22 +81,32 @@ function useCopyToClipboard() {
 }
 
 export function MergedDashboard() {
-  const { accounts, connect } = useSolanaWallet();
-  const organizerWallet = accounts?.[0] || '';
-  const isConnected = !!organizerWallet;
-  const [events, setEvents] = useState([]);
-  const [stats, setStats] = useState({
+  const { accounts } = useSolanaWallet();
+  const organizerWallet: string = accounts?.[0] || '';
+  const isConnected: boolean = !!organizerWallet;
+  const [events, setEvents] = useState<EventDoc[]>([]);
+  const [stats, setStats] = useState<{
+    totalRevenue: { SOL: number; USDC: number };
+    totalTicketsSold: number;
+    activeEvents: number;
+  }>({
     totalRevenue: { SOL: 0, USDC: 0 },
     totalTicketsSold: 0,
     activeEvents: 0,
   });
-  const [recentOrders, setRecentOrders] = useState([]);
-  const [dataLoading, setDataLoading] = useState(true);
-  const [isAuthReady, setIsAuthReady] = useState(false);
+  const [recentOrders, setRecentOrders] = useState<OrderDoc[]>([]);
+  const [dataLoading, setDataLoading] = useState<boolean>(true);
+  const [isAuthReady, setIsAuthReady] = useState<boolean>(false);
   const { isCopied, copyToClipboard } = useCopyToClipboard();
 
   // Profile state
-  const [profile, setProfile] = useState({
+  const [profile, setProfile] = useState<{
+    name: string;
+    bio: string;
+    website: string;
+    twitter: string;
+    discord: string;
+  }>({
     name: "Soluma Events",
     bio: "Your premier host for cutting-edge Web3 and blockchain events. Join us to explore the future of decentralized technology.",
     website: "https://soluma.io",
@@ -135,7 +120,11 @@ export function MergedDashboard() {
         await ensureFirebaseAuth();
         setIsAuthReady(true);
       } catch (e) {
-        console.error("Auth failed:", e.message);
+        if (e instanceof Error) {
+          console.error("Auth failed:", e.message);
+        } else {
+          console.error("Auth failed:", e);
+        }
         setDataLoading(false);
       }
     })();
@@ -151,12 +140,30 @@ export function MergedDashboard() {
 
     async function fetchData() {
       try {
-        const orgEvents = await getOrganizerEvents(organizerWallet);
+        // getOrganizerEvents may return incomplete objects, so map them to EventDoc shape
+        const orgEventsRaw = await getOrganizerEvents(organizerWallet);
+        const orgEvents: EventDoc[] = orgEventsRaw.map((event: any) => ({
+          id: event.id || '',
+          title: event.title || '',
+          slug: event.slug || '',
+          startsAt: event.startsAt || '',
+          currency: event.currency || 'SOL',
+          capacity: event.capacity || 0,
+          salesCount: event.salesCount || 0,
+          status: event.status || 'draft',
+          priceLamports: event.priceLamports || 0,
+          receiverWallet: event.receiverWallet || '',
+          createdBy: event.createdBy || '',
+        }));
         setEvents(orgEvents);
         const fetchedStats = await getDashboardStats(orgEvents);
         setStats(fetchedStats);
       } catch (e) {
-        console.error("Failed to fetch dashboard data:", e);
+        if (e instanceof Error) {
+          console.error("Failed to fetch dashboard data:", e.message);
+        } else {
+          console.error("Failed to fetch dashboard data:", e);
+        }
       } finally {
         setDataLoading(false);
       }
@@ -164,13 +171,13 @@ export function MergedDashboard() {
     fetchData();
   }, [isAuthReady, organizerWallet, isConnected]);
 
-  const formatCurrency = (amount, currency) => {
+  const formatCurrency = (amount: number, currency: string) => {
     if (currency === "SOL") return `${(amount / 1e9).toFixed(4)} SOL`;
     if (currency === "USDC") return `${(amount / 1e6).toFixed(2)} USDC`;
     return `${amount} ${currency}`;
   };
 
-  const formatWalletAddress = (address) => {
+  const formatWalletAddress = (address: string) => {
     if (!address) return "Not connected";
     return `${address.slice(0, 6)}...${address.slice(-6)}`;
   };
@@ -303,7 +310,7 @@ export function MergedDashboard() {
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
-                <h3 className="text-2xl font-bold text-white mb-3 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+                <h3 className="text-2xl font-bold text-white mb-3 bg-gradient-to-r from-white to-gray-300 bg-clip-text ">
                   {profile.name}
                 </h3>
                 <p className="text-gray-400 text-sm mb-6 leading-relaxed line-clamp-3">
@@ -401,13 +408,13 @@ export function MergedDashboard() {
                 </p>
                 <div className="relative inline-flex items-center justify-center group">
                   <div className="absolute transition-all duration-300 rounded-full -inset-px bg-gradient-to-r from-cyan-500 to-blue-500 opacity-75 group-hover:opacity-100"></div>
-                  <button
-                    onClick={connect}
-                    className="relative inline-flex items-center justify-center px-8 py-3 text-base font-medium text-white bg-black border border-transparent rounded-full hover:bg-gray-900 transition-colors duration-200"
-                  >
-                    <Wallet className="w-4 h-4 mr-2" />
-                    Connect Wallet
-                  </button>
+                    <button
+                        onClick={() => window.dispatchEvent(new Event('connect-wallet'))}
+                      className="relative inline-flex items-center justify-center px-8 py-3 text-base font-medium text-white bg-black border border-transparent rounded-full hover:bg-gray-900 transition-colors duration-200"
+                    >
+                      <Wallet className="w-4 h-4 mr-2" />
+                      Connect Wallet
+                    </button>
                 </div>
               </div>
             )}

@@ -109,8 +109,6 @@ function LoadingState() {
 }
 
 function WalletNotConnectedState() {
-  const { connect } = useSolanaWallet();
-
   return (
     <div className="flex justify-center items-center h-full">
       <Card className="bg-gray-900/50 border-gray-800 backdrop-blur-sm max-w-lg w-full">
@@ -126,7 +124,7 @@ function WalletNotConnectedState() {
           </div>
           <div className="pt-4">
             <Button
-              onClick={connect}
+              onClick={() => window.dispatchEvent(new Event('connect-wallet'))}
               size="lg"
               className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-semibold px-8 py-3 rounded-lg transition-all duration-300"
             >
