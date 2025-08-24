@@ -11,7 +11,7 @@ import DocumentationPage from "./pages/docSection";
 
 // Import all dashboard components that will become pages
 import OrganizerDashboard from "./pages/organizerDashboard/section";
-import { DashboardOverview } from "./pages/organizerDashboard/Sections/dashboard-overview";
+// import { DashboardOverview } from "./pages/organizerDashboard/Sections/dashboard-overview";
 import CreateEvent from "./pages/organizerDashboard/Sections/create-event";
 import { MyEvents } from "./pages/organizerDashboard/Sections/my-events";
 import MyTickets from "./pages/organizerDashboard/Sections/MyTickets";
@@ -20,7 +20,7 @@ import EventsList from "./pages/organizerDashboard/Sections/EventsList";
 import { AttendeeManagement } from "./pages/organizerDashboard/Sections/attendee-management";
 import { Revenue } from "./pages/organizerDashboard/Sections/revenue";
 import { Settings } from "./pages/organizerDashboard/Sections/settings";
-import { Profile } from "./pages/organizerDashboard/Sections/profile";
+import { MergedDashboard } from "./pages/organizerDashboard/Sections/profile";
 
 export default function App() {
   // The navigate function will be passed down to handle programmatic navigation
@@ -45,8 +45,8 @@ export default function App() {
 
       {/* --- Organizer Dashboard Routes with its own Sidebar --- */}
       <Route path="/dashboard" element={<OrganizerDashboard />}>
-        <Route index element={<DashboardOverview />} />
-        <Route path="profile" element={<Profile />} />
+        {/* <Route index element={<DashboardOverview />} /> */}
+        <Route path="profile" element={<MergedDashboard />} />
         <Route path="tickets" element={<MyTickets />} />
         <Route path="explore" element={<EventsList />} />
         {/* FIX: Pass the navigation handler to MyEvents */}

@@ -17,7 +17,7 @@ interface OrganizerSidebarProps {
 }
 
 const allSidebarItems = [
-  { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, to: "/dashboard", organizerOnly: false },
+  // { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, to: "/dashboard", organizerOnly: false },
   { id: "profile", label: "Profile", icon: User, to: "/dashboard/profile", organizerOnly: false },
   { id: "my-tickets", label: "My Tickets", icon: Ticket, to: "/dashboard/tickets", organizerOnly: false },
   { id: "explore", label: "Explore Events", icon: Calendar, to: "/dashboard/explore", organizerOnly: false },
