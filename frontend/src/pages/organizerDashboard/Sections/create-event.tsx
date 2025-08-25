@@ -61,7 +61,7 @@ export default function CreateEventEnhanced() {
     onSuccess: (id) => {
       queryClient.invalidateQueries({ queryKey: ["events", "published"] });
       handleEventCreated(); // This will update the state in the layout
-      navigate(`/e/${id}`);
+      navigate(`/events/${id}`);
     },
     onError: (e: any) => {
       setErr(e?.message || "Failed to create event. Please try again.");
