@@ -187,15 +187,7 @@ export function Footer() {
         </div>
       </div>
 
-      <style jsx>{`
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
-      `}</style>
+      {/* Removed <style jsx> block, not supported in Vite/React. Use global CSS or Tailwind utilities instead. */}
     </footer>
   );
 }
