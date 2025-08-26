@@ -7,7 +7,7 @@ const ComponentName: React.FC = () => {
     <div>
       {/* Hero Section */}
       <section className="py-12 bg-black sm:pb-16 lg:pb-20 xl:pb-24">
-        <div className="px-4 pt-8 mx-auto sm:px-6 lg:px-8 max-w-7xl mt-6">
+        <div className="px-4 pt-2 mx-auto sm:px-6 lg:px-8 max-w-7xl mt-6">
           <div className="relative">
             <div className="lg:w-2/3">
               <p className="text-sm font-normal tracking-widest text-gray-300 uppercase">

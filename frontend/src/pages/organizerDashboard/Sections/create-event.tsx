@@ -154,7 +154,7 @@ export default function CreateEventEnhanced() {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8 pt-8">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent mb-2">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent mb-2">
             Create Your Event
           </h1>
           <p className="text-gray-400 text-lg">

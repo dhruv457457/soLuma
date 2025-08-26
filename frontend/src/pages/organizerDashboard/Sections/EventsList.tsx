@@ -196,10 +196,10 @@ export default function EventsList() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen bg-black text-white p-2 sm:p-1 lg:p-2">
       <div className="max-w-7xl mx-auto py-8">
         <div className="text-center mb-8">
-          <h2 className="text-4xl font-bold bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent mb-4">
+          <h2 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent mb-4">
             Discover Events
           </h2>
           <p className="text-gray-400 text-lg max-w-2xl mx-auto mb-6">
@@ -211,7 +211,7 @@ export default function EventsList() {
           <div className="flex items-center gap-4">
             <div className="relative flex-1">
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <Search className="h-5 w-5 text-gray-400" />
+                <Search className="h-4 w-4 text-gray-400" />
               </div>
               <input
                 type="text"
@@ -229,9 +229,9 @@ export default function EventsList() {
                 </button>
               </div>
             </div>
-            <div className="relative bg-slate-800/90 backdrop-blur-md border border-slate-700/60 rounded-2xl p-1.5 shadow-2xl flex-shrink-0 min-w-fit">
+            <div className="relative bg-slate-800/90 backdrop-blur-md border border-slate-700/60 rounded-2xl p-1.5 shadow-2xl flex-shrink-0 min-w-fit hidden sm:block ">
               <div 
-                className="absolute top-1.5 bottom-1.5 bg-gradient-to-r from-slate-600 to-slate-700 rounded-xl transition-all duration-500 ease-out shadow-lg border border-slate-600/50"
+                className="absolute top-1.5 bottom-1.5 bg-gradient-to-r from-slate-600 to-slate-700 rounded-xl transition-all duration-500 ease-out shadow-lg border border-slate-600/50 "
                 style={{
                   left: activeTab === 'upcoming' ? '6px' : '50%',
                   right: activeTab === 'upcoming' ? '50%' : '6px',
