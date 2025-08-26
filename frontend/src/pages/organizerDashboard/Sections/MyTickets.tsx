@@ -162,69 +162,86 @@ export default function MyTickets() {
     enabled: isAuthReady && isConnected,
   });
 
-  const renderContent = () => {
-    if (!isConnected) {
-      return <WalletNotConnectedState />;
-    }
-    if (isLoading || !isAuthReady) {
-      return <LoadingState />;
-    }
-    if (isError) {
-      return (
-        <div className="text-center py-12 text-red-400">
-          Error: {error?.message || "Failed to load tickets."}
+  // UI Layout similar to EventsList
+  return (
+    <div className="min-h-screen bg-black p-4">
+      <div className="max-w-7xl mx-auto py-8">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h2 className="text-4xl font-bold bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent mb-4">
+            My Tickets
+          </h2>
+          <p className="text-gray-400 text-lg max-w-2xl mx-auto mb-6">
+            Here are all the event tickets you've collected.
+          </p>
         </div>
-      );
-    }
-    if (tickets && tickets.length === 0) {
-      return (
-        <div className="flex justify-center items-center h-full">
-        <Card className="bg-gray-900/50 border-gray-800 backdrop-blur-sm max-w-lg w-full">
-            <CardContent className="p-10 text-center space-y-6">
-              <div className="w-16 h-16 mx-auto bg-gradient-to-br from-cyan-500/20 to-blue-500/20 rounded-full flex items-center justify-center">
+
+        {/* Loading State */}
+        {(!isAuthReady || isLoading) && (
+          <div className="min-h-[40vh] flex items-center justify-center">
+            <div className="flex items-center gap-4 text-lg">
+              <div className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+              Loading tickets...
+            </div>
+          </div>
+        )}
+
+        {/* Wallet Not Connected */}
+        {!isConnected && isAuthReady && (
+          <WalletNotConnectedState />
+        )}
+
+        {/* Error State */}
+        {isError && (
+          <div className="min-h-[40vh] flex items-center justify-center">
+            <div className="bg-red-900/50 border border-red-500/20 text-red-400 p-4 rounded-xl flex items-center gap-3">
+              <div className="w-2 h-2 bg-red-500 rounded-full animate-ping"></div>
+              Error: {error?.message || "Failed to load tickets."}
+            </div>
+          </div>
+        )}
+
+        {/* No Tickets State */}
+        {isConnected && isAuthReady && tickets && tickets.length === 0 && !isLoading && (
+          <div className="max-w-md mx-auto">
+            <div className="p-8 text-center bg-gradient-to-br from-gray-900/60 to-gray-950/80 backdrop-blur-md border border-gray-700/40 rounded-3xl shadow-xl">
+              <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
                 <TicketX className="w-8 h-8 text-cyan-400" />
               </div>
-              <div className="space-y-2">
-                <h3 className="text-2xl font-bold text-white">No Tickets Found</h3>
-                <p className="text-gray-400 text-lg">
-                  You haven't purchased any tickets yet.
-                </p>
-              </div>
-              <div className="pt-4">
-                <Button
-                  asChild
-                  size="lg"
-                  className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-semibold px-8 py-3 rounded-lg transition-all duration-300"
-                >
-                  <Link to="/dashboard/explore">Explore Events</Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      );
-    }
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-        {tickets?.map((ticket) => (
-          <TicketCard key={ticket.id} ticket={ticket} event={ticket.event} />
-        ))}
-      </div>
-    );
-  };
+              <h3 className="text-xl font-semibold text-white mb-2">
+                No Tickets Found
+              </h3>
+              <p className="text-gray-400 mb-6">
+                You haven't purchased any tickets yet.
+              </p>
+              <Button
+                asChild
+                size="lg"
+                className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-semibold px-8 py-3 rounded-lg transition-all duration-300"
+              >
+                <Link to="/dashboard/explore">Explore Events</Link>
+              </Button>
+            </div>
+          </div>
+        )}
 
-  return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
-          My Tickets
-        </h1>
-        <p className="text-gray-400 mt-2">
-          Here are all the event tickets you've collected.
-        </p>
+        {/* Tickets Grid */}
+        {isConnected && isAuthReady && tickets && tickets.length > 0 && !isLoading && (
+          <>
+            {/* Results Count */}
+            <div className="text-center mb-6">
+              <p className="text-gray-400">
+                Showing {tickets.length} ticket{tickets.length > 1 ? 's' : ''}
+              </p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-8">
+              {tickets.map((ticket) => (
+                <TicketCard key={ticket.id} ticket={ticket} event={ticket.event} />
+              ))}
+            </div>
+          </>
+        )}
       </div>
-      <hr className="border-gray-800" />
-      {renderContent()}
     </div>
   );
 }

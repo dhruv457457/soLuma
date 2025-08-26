@@ -7,7 +7,7 @@ const ComponentName: React.FC = () => {
     <div>
       {/* Hero Section */}
       <section className="py-12 bg-black sm:pb-16 lg:pb-20 xl:pb-24">
-        <div className="px-4 mx-auto sm:px-6 lg:px-8 max-w-7xl mt-6">
+        <div className="px-4 pt-8 mx-auto sm:px-6 lg:px-8 max-w-7xl mt-6">
           <div className="relative">
             <div className="lg:w-2/3">
               <p className="text-sm font-normal tracking-widest text-gray-300 uppercase">
@@ -19,11 +19,10 @@ const ComponentName: React.FC = () => {
                 </span>{" "}
                 <br />& Payments
               </h1>
-              <p className="max-w-lg mt-4 text-xl font-normal text-gray-400 sm:mt-8">
+              <p className="max-w-lg mt-4 text-2xl font-normal text-gray-400 sm:mt-8">
                 Effortlessly create and manage events on the Solana blockchain
                 with Soluma. Sell tickets, manage attendees, and receive
-                payments directly to your wallet. Simplify group expenses with
-                our "Pacts" feature for any shared cost.
+                payments directly to your wallet.
               </p>
               <div className="relative inline-flex items-center justify-center mt-8 sm:mt-12 group">
               <div className="absolute transition-all duration-200 rounded-full -inset-px bg-gradient-to-r from-cyan-500 to-purple-500 group-hover:shadow-lg group-hover:shadow-cyan-500/50"></div>

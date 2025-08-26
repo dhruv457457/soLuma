@@ -44,7 +44,7 @@ export function OrganizerSidebar({ sidebarOpen, setSidebarOpen, isOrganizer }: O
   const NavItem = ({ item, isMobile = false }: { item: typeof sidebarItems[0], isMobile?: boolean }) => (
     <NavLink
       to={item.to}
-      end={item.to === "/dashboard"}
+      end={item.to === "/dashboard" || item.id === "my-events"}
       onClick={() => isMobile && setSidebarOpen(false)}
       className={({ isActive }) => cn(
         "w-full flex items-center px-4 py-3 text-left rounded-lg transition-all duration-300 ease-in-out relative overflow-hidden",

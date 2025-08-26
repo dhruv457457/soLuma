@@ -16,8 +16,8 @@ type NavItem = {
 };
 
 const navItems: NavItem[] = [
-  { label: "Create Event", to: "/dashboard/events/new" },
   { label: "Docs", to: "/docs" },
+  { label: "Create Event", to: "/dashboard/events/new" },
   { label: "Explore Events", to: "/dashboard/explore" },
   { label: "My Tickets", to: "/dashboard/tickets" },
 ];
@@ -218,7 +218,7 @@ export default function NavBar() {
               </div>
             )}
             <div className="py-2">
-              <Link to="/dashboard" className="group flex items-center gap-3 px-4 py-3 text-white hover:bg-gray-800/70 transition-all duration-200 transform hover:translate-x-1" onClick={() => setProfileOpen(false)}>
+              <Link to="/dashboard/profile" className="group flex items-center gap-3 px-4 py-3 text-white hover:bg-gray-800/70 transition-all duration-200 transform hover:translate-x-1" onClick={() => setProfileOpen(false)}>
                 <div className="w-5 h-5 text-gray-400 group-hover:text-blue-400 transition-colors duration-200">
                   <svg viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
@@ -292,7 +292,8 @@ export default function NavBar() {
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="flex h-16 items-center">
             <div className="flex flex-1 items-center justify-between">
-              <div className="flex items-center gap-8">
+              {/* Left: Logo */}
+              <div className="flex items-center gap-4">
                 <Link to="/" className="inline-flex items-center cursor-pointer group">
                   <img src={logo} alt="Soluma Logo" className="h-12 w-12" />
                   <span className="text-2xl font-bold tracking-tight">
@@ -300,22 +301,24 @@ export default function NavBar() {
                     <span className="text-blue-400 group-hover:text-purple-400 transition-colors duration-200">ma</span>
                   </span>
                 </Link>
-                <div className="hidden md:flex items-center gap-2">
+              </div>
+
+              {/* Right: Time, Nav Links, Wallet/Profile */}
+              <div className="hidden md:flex items-center gap-8">
+                <div className="text-gray-400 text-sm font-mono bg-gray-900/50 px-3 py-1.5 rounded-lg border border-gray-800">
+                  {formatTime(currentTime)}
+                </div>
+                <div className="flex items-center gap-2">
                   {navItems.map(({ label, to }) => (
                     <NavLink key={to} to={to} className={({ isActive }) => navClasses(isActive)}>
                       {label}
                     </NavLink>
                   ))}
                 </div>
-              </div>
-
-              <div className="hidden md:flex items-center gap-8">
-                <div className="text-gray-400 text-sm font-mono bg-gray-900/50 px-3 py-1.5 rounded-lg border border-gray-800">
-                  {formatTime(currentTime)}
-                </div>
                 <WalletSection />
               </div>
 
+              {/* Mobile: Hamburger */}
               <div className="md:hidden">
                 <button
                   ref={btnRef}

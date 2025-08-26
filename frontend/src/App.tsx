@@ -49,6 +49,7 @@ export default function App() {
         <Route path="profile" element={<MergedDashboard />} />
         <Route path="tickets" element={<MyTickets />} />
         <Route path="explore" element={<EventsList />} />
+        <Route path="scanner" element={<Scanner />} />
         {/* FIX: Pass the navigation handler to MyEvents */}
         <Route path="events" element={<MyEvents setActiveSection={handleManageEvent} />} />
         <Route path="events/new" element={<CreateEvent />} />
@@ -61,7 +62,6 @@ export default function App() {
             />
           } 
         />
-        <Route path="scanner" element={<Scanner />} />
         <Route path="revenue" element={<Revenue />} />
         <Route path="settings" element={<Settings />} />
       </Route>
