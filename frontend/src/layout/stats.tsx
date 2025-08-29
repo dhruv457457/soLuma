@@ -27,20 +27,20 @@ export default function StatsSection() {
     }
   }, [])
 
-  const stats = [
+  const supports = [
     {
-      number: "1M+",
-      label: "Tickets Minted On-Chain",
+      title: "Web3Auth",
+      description: "Secure social login & embedded wallet for Web3 access.",
       delay: "delay-100",
     },
     {
-      number: "5,000+",
-      label: "Events Successfully Hosted",
+      title: "Solana",
+      description: "High-performance blockchain infrastructure for speed & scale.",
       delay: "delay-200",
     },
     {
-      number: "99.9%",
-      label: "Uptime & Reliability",
+      title: "Solana Pay",
+      description: "Instant payments with QR codes & unique payment links.",
       delay: "delay-300",
     },
   ]
@@ -70,10 +70,10 @@ export default function StatsSection() {
                 isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
               }`}
             >
-              Proven by Numbers,
+              Powered by the Best in Web3
               <br />
               <span className="bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent">
-                Trusted by Creators
+                Trusted Infrastructure
               </span>
             </h2>
 
@@ -82,25 +82,25 @@ export default function StatsSection() {
                 isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
               }`}
             >
-              Soluma is engineered for reliability and scale. We provide the robust infrastructure needed for Web3 events, ensuring every ticket, payment, and interaction is secure and transparent on the Solana blockchain.
+              Soluma is backed by industry-leading Web3 tools. With Web3Auth, Solana blockchain, and Solana Pay, we ensure security, scalability, and seamless payments for all events.
             </p>
           </div>
 
-          {/* Right Stats Cards */}
+          {/* Right Support Cards */}
           <div className="space-y-6">
-            {stats.map((stat, index) => (
+            {supports.map((item, index) => (
               <div
                 key={index}
                 className={`group relative bg-gray-900/50 backdrop-blur-sm border border-gray-800/50 rounded-2xl p-8 hover:border-purple-500/50 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-purple-500/10 ${
-                  isVisible ? `opacity-100 translate-x-0 ${stat.delay}` : "opacity-0 translate-x-8"
+                  isVisible ? `opacity-100 translate-x-0 ${item.delay}` : "opacity-0 translate-x-8"
                 }`}
               >
                 <div className="flex flex-col space-y-2">
-                  <div className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent transition-all duration-500 group-hover:bg-gradient-to-r group-hover:from-cyan-400 group-hover:to-purple-400">
-                    {stat.number}
+                  <div className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent transition-all duration-500 group-hover:bg-gradient-to-r group-hover:from-cyan-400 group-hover:to-purple-400">
+                    {item.title}
                   </div>
                   <div className="text-gray-400 text-lg font-medium transition-colors duration-300 group-hover:text-gray-300">
-                    {stat.label}
+                    {item.description}
                   </div>
                 </div>
               </div>
