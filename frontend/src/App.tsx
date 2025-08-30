@@ -15,10 +15,10 @@ import OrganizerDashboard from "./pages/organizerDashboard/section";
 import CreateEvent from "./pages/organizerDashboard/Sections/create-event";
 import { MyEvents } from "./pages/organizerDashboard/Sections/my-events";
 import MyTickets from "./pages/organizerDashboard/Sections/MyTickets";
+import DashboardTicketView from "./pages/organizerDashboard/Sections/DashboardTicketView";
 import Scanner from "./pages/organizerDashboard/Sections/Scanner";
 import EventsList from "./pages/organizerDashboard/Sections/EventsList";
 import { AttendeeManagement } from "./pages/organizerDashboard/Sections/attendee-management";
-import { Revenue } from "./pages/organizerDashboard/Sections/revenue";
 import { Settings } from "./pages/organizerDashboard/Sections/settings";
 import { MergedDashboard } from "./pages/organizerDashboard/Sections/profile";
 
@@ -48,8 +48,13 @@ export default function App() {
         {/* <Route index element={<DashboardOverview />} /> */}
         <Route path="profile" element={<MergedDashboard />} />
         <Route path="tickets" element={<MyTickets />} />
+        <Route path="tickets/:ticketId" element={<DashboardTicketView />} />
         <Route path="explore" element={<EventsList />} />
         <Route path="scanner" element={<Scanner />} />
+        {/* Event details inside dashboard */}
+        <Route path="events/:id" element={<EventDetails />} />
+        {/* Scanner for specific event inside dashboard */}
+        <Route path="events/:id/scanner" element={<Scanner />} />
         {/* FIX: Pass the navigation handler to MyEvents */}
         <Route path="events" element={<MyEvents setActiveSection={handleManageEvent} />} />
         <Route path="events/new" element={<CreateEvent />} />
@@ -62,7 +67,6 @@ export default function App() {
             />
           } 
         />
-        <Route path="revenue" element={<Revenue />} />
         <Route path="settings" element={<Settings />} />
       </Route>
 

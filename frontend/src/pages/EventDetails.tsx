@@ -60,8 +60,20 @@ export default function EventDetails() {
   return (
     <div className="min-h-screen bg-black text-white p-4 sm:p-6 lg:p-8">
       <div className="max-w-6xl mx-auto">
+        {/* Top left: Back button and event name */}
+        <div className="flex items-center gap-4 mb-8">
+          <Button
+            variant="outline"
+            className="bg-gray-900/70 border-gray-700 text-white hover:bg-gray-800 hover:text-cyan-400 px-4 py-2 rounded-lg cursor-pointer"
+            onClick={() => navigate(-1)}
+          >
+            &#8592; Back
+          </Button>
+          <span className="text-4xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
+            {ev.title}
+          </span>
+        </div>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
           {/* Left Column (Sticky Details & Ticket Card) */}
           <div className="lg:col-span-1 space-y-8 lg:sticky lg:top-8 self-start">
              {ev.bannerUrl && (

@@ -52,6 +52,7 @@ export default function CreateEventEnhanced() {
   const [err, setErr] = useState<string | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -65,6 +66,7 @@ export default function CreateEventEnhanced() {
     },
     onError: (e: any) => {
       setErr(e?.message || "Failed to create event. Please try again.");
+      setIsSubmitting(false); // Re-enable button on mutation error
     },
   });
 
@@ -93,15 +95,18 @@ export default function CreateEventEnhanced() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setErr(null);
+    setIsSubmitting(true); // Disable button immediately
 
     if (!title || !startsAt || !price || !receiverWallet) {
       setErr("Please fill all required fields.");
+      setIsSubmitting(false); // Re-enable button on validation error
       return;
     }
 
     const priceNum = Number(price);
     if (!Number.isFinite(priceNum) || priceNum <= 0) {
       setErr("Price must be a positive number.");
+      setIsSubmitting(false); // Re-enable button on validation error
       return;
     }
 
@@ -110,6 +115,7 @@ export default function CreateEventEnhanced() {
     const organizerWallet = accounts?.[0];
     if (!organizerWallet) {
         setErr("Please connect your wallet to create an event.");
+        setIsSubmitting(false); // Re-enable button on validation error
         return;
     }
 
@@ -122,6 +128,7 @@ export default function CreateEventEnhanced() {
         bannerUrl = await uploadImage(logoFile);
       } catch (error: any) {
         setErr(error.message || "Failed to upload image.");
+        setIsSubmitting(false); // Re-enable button on upload error
         return;
       }
     }
@@ -147,7 +154,7 @@ export default function CreateEventEnhanced() {
     createEventMutation.mutate(newEvent);
   }
 
-  const submitting = createEventMutation.isPending;
+  const submitting = createEventMutation.isPending || isSubmitting;
   return (
     <>
     <div className="min-h-screen bg-black p-4">
@@ -177,6 +184,7 @@ export default function CreateEventEnhanced() {
                   accept="image/*"
                   onChange={handleLogoUpload}
                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                  disabled={submitting}
                 />
                 <div className="aspect-square rounded-xl border-2 border-dashed border-gray-700 hover:border-cyan-400 transition-colors duration-300 flex items-center justify-center bg-black overflow-hidden">
                   {logoPreview ? (
@@ -234,6 +242,7 @@ export default function CreateEventEnhanced() {
                     onChange={(e) => setTitle(e.target.value)}
                     placeholder="Solana Summer Meetup"
                     required
+                    disabled={submitting}
                   />
                 </div>
 
@@ -248,6 +257,7 @@ export default function CreateEventEnhanced() {
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     placeholder="Share the details of your event..."
+                    disabled={submitting}
                   />
                 </div>
 
@@ -264,6 +274,7 @@ export default function CreateEventEnhanced() {
                       value={startsAt}
                       onChange={(e) => setStartsAt(e.target.value)}
                       required
+                      disabled={submitting}
                     />
                   </div>
                   <div>
@@ -277,6 +288,7 @@ export default function CreateEventEnhanced() {
                       value={endsAt}
                       onChange={(e) => setEndsAt(e.target.value)}
                       required
+                      disabled={submitting}
                     />
                   </div>
                 </div>
@@ -292,6 +304,7 @@ export default function CreateEventEnhanced() {
                     value={venue}
                     onChange={(e) => setVenue(e.target.value)}
                     placeholder="123 Main St, City or Virtual Event Link"
+                    disabled={submitting}
                   />
                 </div>
 
@@ -305,6 +318,7 @@ export default function CreateEventEnhanced() {
                       className="w-full bg-black border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 transition-all duration-300"
                       value={currency}
                       onChange={(e) => setCurrency(e.target.value as Currency)}
+                      disabled={submitting}
                     >
                       <option value="SOL">SOL</option>
                       <option value="USDC">USDC</option>
@@ -324,6 +338,7 @@ export default function CreateEventEnhanced() {
                       onChange={(e) => setPrice(e.target.value)}
                       placeholder={currency === "SOL" ? "0.25" : "25"}
                       required
+                      disabled={submitting}
                     />
                   </div>
                   <div>
@@ -338,6 +353,7 @@ export default function CreateEventEnhanced() {
                       value={capacity}
                       onChange={(e) => setCapacity(e.target.value)}
                       placeholder="100"
+                      disabled={submitting}
                     />
                   </div>
                 </div>
@@ -354,6 +370,7 @@ export default function CreateEventEnhanced() {
                     onChange={(e) => setReceiverWallet(e.target.value)}
                     placeholder="Your Solana wallet address"
                     required
+                    disabled={submitting}
                   />
                 </div>
 

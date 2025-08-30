@@ -31,8 +31,6 @@ import { ensureFirebaseAuth } from "../../../config/firebase";
 import PaymentQR from "../../../ui/PaymentQr";
 import { Link } from "react-router-dom";
 
-// ...existing code...
-
 // Copy to clipboard hook
 function useCopyToClipboard() {
   const [isCopied, setIsCopied] = useState(false);
@@ -120,6 +118,75 @@ export function MergedDashboard() {
     }
     fetchData();
   }, [isAuthReady, organizerWallet, isConnected]);
+
+  // Fetch recent activity
+  useEffect(() => {
+    if (!isAuthReady || !isConnected || events.length === 0) {
+      return;
+    }
+
+    let unsubscribe: (() => void) | null = null;
+
+    async function setupActivitySubscription() {
+      try {
+        // Get event IDs for the organizer
+        const eventIds = events.map(event => event.id);
+        
+        // Subscribe to recent activity for these events
+        unsubscribe = await subscribeToRecentActivity(
+          eventIds,
+          (newOrders: OrderDoc[]) => {
+            setRecentOrders(prevOrders => {
+              // Merge new orders with existing ones, avoiding duplicates
+              const allOrders = [...newOrders, ...prevOrders];
+              const uniqueOrders = allOrders.filter((order, index, self) => 
+                index === self.findIndex(o => o.id === order.id)
+              );
+              // Sort by creation date (newest first) and take latest 10
+              return uniqueOrders
+                .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                .slice(0, 10);
+            });
+          }
+        );
+      } catch (error) {
+        console.error("Failed to subscribe to recent activity:", error);
+        // Fallback: fetch recent orders once
+        fetchRecentOrders();
+      }
+    }
+
+    async function fetchRecentOrders() {
+      try {
+        // Mock recent orders data for demonstration
+        // In a real implementation, you would fetch from your database
+        const mockOrders: OrderDoc[] = events.slice(0, 3).map((event, index) => ({
+          id: `order-${Date.now()}-${index}`,
+          eventId: event.id,
+          buyerWallet: `buyer-${index + 1}`,
+          qty: Math.floor(Math.random() * 3) + 1,
+          totalAmount: event.priceLamports * (Math.floor(Math.random() * 3) + 1),
+          currency: event.currency,
+          status: 'completed',
+          createdAt: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
+          updatedAt: new Date().toISOString(),
+          transactionSignature: `tx-${Date.now()}-${index}`,
+        }));
+        
+        setRecentOrders(mockOrders);
+      } catch (error) {
+        console.error("Failed to fetch recent orders:", error);
+      }
+    }
+
+    setupActivitySubscription();
+
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
+  }, [isAuthReady, isConnected, events]);
 
   const formatCurrency = (amount: number, currency: string) => {
     if (currency === "SOL") return `${(amount / 1e9).toFixed(4)} SOL`;
@@ -359,7 +426,7 @@ export function MergedDashboard() {
                 )}
               </div>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className={`space-y-4 ${events.length > 4 ? 'max-h-96 overflow-y-auto scrollbar-hide' : ''}`}>
               {events.length > 0 ? (
                 events.slice(0, 5).map((event) => (
                   <div
@@ -455,29 +522,36 @@ export function MergedDashboard() {
               </CardTitle>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className={`${recentOrders.length > 4 ? 'max-h-96 overflow-y-auto scrollbar-hide' : ''}`}>
             {recentOrders.length > 0 ? (
               <div className="space-y-4">
-                {recentOrders.slice(0, 5).map((order) => (
-                  <div
-                    key={order.id}
-                    className="flex items-center gap-4 p-4 rounded-lg border border-gray-800 bg-gray-950"
-                  >
-                    <div className="w-2 h-2 rounded-full bg-green-400 flex-shrink-0"></div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-white">
-                        New ticket purchase
-                      </p>
-                      <p className="text-sm text-gray-400">
-                        {order.qty} ticket(s) - Event #{order.eventId.slice(-6)}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {new Date(order.createdAt).toLocaleString()}
-                      </p>
+                {recentOrders.slice(0, 5).map((order) => {
+                  // Find the associated event
+                  const event = events.find(e => e.id === order.eventId);
+                  return (
+                    <div
+                      key={order.id}
+                      className="flex items-center gap-4 p-4 rounded-lg border border-gray-800 bg-gray-950"
+                    >
+                      <div className="w-2 h-2 rounded-full bg-green-400 flex-shrink-0"></div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-white">
+                          New ticket purchase
+                        </p>
+                        <p className="text-sm text-gray-400">
+                          {order.qty} ticket(s) - {event?.title || `Event #${order.eventId.slice(-6)}`}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {new Date(order.createdAt).toLocaleString()}
+                        </p>
+                        <p className="text-xs text-cyan-400 font-mono">
+                          {formatCurrency(order.totalAmount, order.currency)}
+                        </p>
+                      </div>
+                      <TrendingUp className="w-4 h-4 text-green-400" />
                     </div>
-                    <TrendingUp className="w-4 h-4 text-green-400" />
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <div className="text-center py-12">

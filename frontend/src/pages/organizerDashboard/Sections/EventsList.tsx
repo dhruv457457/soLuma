@@ -27,7 +27,7 @@ function EventRow({ ev }: { ev: any }) {
   return (
     // FIX #1: Updated the link to the correct event details route
     <Link 
-      to={`/events/${ev.id}`} 
+      to={`/dashboard/events/${ev.id}`} 
       className="group block relative bg-gradient-to-br from-gray-900/60 to-gray-950/80 backdrop-blur-md border border-gray-700/40 rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl hover:border-gray-600/60 transition-all duration-300"
     >
       {/* Event Image with Overlay */}

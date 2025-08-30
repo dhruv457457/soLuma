@@ -138,7 +138,7 @@ export default function EventCheckout() {
       if (!ticketIds || ticketIds.length === 0) {
         throw new Error("Failed to issue tickets after payment was confirmed.");
       }
-      navigate(`/tickets/${ticketIds[0]}`);
+      navigate(`/dashboard/tickets/${ticketIds[0]}`);
     } catch (e: any) {
       setErr(e?.message || "Payment failed. Please try again.");
     } finally {

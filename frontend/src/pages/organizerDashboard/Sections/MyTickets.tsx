@@ -26,7 +26,7 @@ function TicketCard({ ticket, event }: { ticket: TicketDoc; event: EventDoc }) {
   const status = statusMap[ticket.status] || { label: ticket.status, color: "bg-gray-500/20 text-gray-400 border-gray-500/30" };
 
   return (
-    <Link to={`/tickets/${ticket.id}`} className="group block relative bg-gradient-to-br from-gray-900/60 to-gray-950/80 backdrop-blur-md border border-gray-700/40 rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl hover:border-cyan-500/30 transition-all duration-300">
+    <Link to={`/dashboard/tickets/${ticket.id}`} className="group block relative bg-gradient-to-br from-gray-900/60 to-gray-950/80 backdrop-blur-md border border-gray-700/40 rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl hover:border-cyan-500/30 transition-all duration-300">
       {/* Banner Image */}
       <div className="relative w-full aspect-[2.2/1] overflow-hidden">
         {isExpired && (
@@ -91,7 +91,7 @@ function TicketCard({ ticket, event }: { ticket: TicketDoc; event: EventDoc }) {
             className="flex-1 bg-slate-800 hover:bg-slate-700 text-xs sm:text-sm py-2 sm:py-2.5 px-3 sm:px-4 text-white rounded-md cursor-pointer"
             asChild
           >
-            <Link to={`/tickets/${ticket.id}`}>View Details</Link>
+            <Link to={`/dashboard/tickets/${ticket.id}`}>View Details</Link>
           </Button>
         </div>
       </div>
