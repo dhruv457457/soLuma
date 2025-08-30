@@ -127,24 +127,29 @@ export function MergedDashboard() {
 
     let unsubscribe: (() => void) | null = null;
 
-    async function setupActivitySubscription() {
+    function setupActivitySubscription() {
       try {
         // Get event IDs for the organizer
-        const eventIds = events.map(event => event.id);
-        
+        const eventIds = events.map((event) => event.id);
+
         // Subscribe to recent activity for these events
-        unsubscribe = await subscribeToRecentActivity(
+        unsubscribe = subscribeToRecentActivity(
           eventIds,
           (newOrders: OrderDoc[]) => {
-            setRecentOrders(prevOrders => {
+            setRecentOrders((prevOrders) => {
               // Merge new orders with existing ones, avoiding duplicates
               const allOrders = [...newOrders, ...prevOrders];
-              const uniqueOrders = allOrders.filter((order, index, self) => 
-                index === self.findIndex(o => o.id === order.id)
+              const uniqueOrders = allOrders.filter(
+                (order, index, self) =>
+                  index === self.findIndex((o) => o.id === order.id)
               );
               // Sort by creation date (newest first) and take latest 10
               return uniqueOrders
-                .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                .sort(
+                  (a, b) =>
+                    new Date(b.createdAt).getTime() -
+                    new Date(a.createdAt).getTime()
+                )
                 .slice(0, 10);
             });
           }
@@ -156,23 +161,25 @@ export function MergedDashboard() {
       }
     }
 
-    async function fetchRecentOrders() {
+    function fetchRecentOrders() {
       try {
         // Mock recent orders data for demonstration
         // In a real implementation, you would fetch from your database
-        const mockOrders: OrderDoc[] = events.slice(0, 3).map((event, index) => ({
-          id: `order-${Date.now()}-${index}`,
-          eventId: event.id,
-          buyerWallet: `buyer-${index + 1}`,
-          qty: Math.floor(Math.random() * 3) + 1,
-          totalAmount: event.priceLamports * (Math.floor(Math.random() * 3) + 1),
-          currency: event.currency,
-          status: 'completed',
-          createdAt: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
-          updatedAt: new Date().toISOString(),
-          transactionSignature: `tx-${Date.now()}-${index}`,
-        }));
-        
+        const mockOrders: OrderDoc[] = events
+          .slice(0, 3)
+          .map((event, index) => ({
+            id: `order-${Date.now()}-${index}`,
+            eventId: event.id,
+            buyerWallet: "mock-buyer-wallet",
+            qty: 1,
+            amountLamports: event.priceLamports,
+            currency: event.currency,
+            receiverWallet: event.receiverWallet,
+            reference: `ref-${Date.now()}-${index}`, // ✅ add this
+            status: "pending",
+            createdAt: Date.now(),
+          }));
+
         setRecentOrders(mockOrders);
       } catch (error) {
         console.error("Failed to fetch recent orders:", error);
@@ -182,7 +189,7 @@ export function MergedDashboard() {
     setupActivitySubscription();
 
     return () => {
-      if (unsubscribe) {
+      if (unsubscribe && typeof unsubscribe === "function") {
         unsubscribe();
       }
     };
@@ -426,7 +433,13 @@ export function MergedDashboard() {
                 )}
               </div>
             </CardHeader>
-            <CardContent className={`space-y-4 ${events.length > 4 ? 'max-h-96 overflow-y-auto scrollbar-hide' : ''}`}>
+            <CardContent
+              className={`space-y-4 ${
+                events.length > 4
+                  ? "max-h-96 overflow-y-auto scrollbar-hide"
+                  : ""
+              }`}
+            >
               {events.length > 0 ? (
                 events.slice(0, 5).map((event) => (
                   <div
@@ -522,12 +535,18 @@ export function MergedDashboard() {
               </CardTitle>
             </div>
           </CardHeader>
-          <CardContent className={`${recentOrders.length > 4 ? 'max-h-96 overflow-y-auto scrollbar-hide' : ''}`}>
+          <CardContent
+            className={`${
+              recentOrders.length > 4
+                ? "max-h-96 overflow-y-auto scrollbar-hide"
+                : ""
+            }`}
+          >
             {recentOrders.length > 0 ? (
               <div className="space-y-4">
                 {recentOrders.slice(0, 5).map((order) => {
                   // Find the associated event
-                  const event = events.find(e => e.id === order.eventId);
+                  const event = events.find((e) => e.id === order.eventId);
                   return (
                     <div
                       key={order.id}
@@ -539,13 +558,15 @@ export function MergedDashboard() {
                           New ticket purchase
                         </p>
                         <p className="text-sm text-gray-400">
-                          {order.qty} ticket(s) - {event?.title || `Event #${order.eventId.slice(-6)}`}
+                          {order.qty} ticket(s) -{" "}
+                          {event?.title || `Event #${order.eventId.slice(-6)}`}
                         </p>
                         <p className="text-xs text-gray-500">
                           {new Date(order.createdAt).toLocaleString()}
                         </p>
                         <p className="text-xs text-cyan-400 font-mono">
-                          {formatCurrency(order.totalAmount, order.currency)}
+                          {/* ERROR FIX: Changed order.totalAmount to order.amountLamports */}
+                          {formatCurrency(order.amountLamports, order.currency)}
                         </p>
                       </div>
                       <TrendingUp className="w-4 h-4 text-green-400" />
