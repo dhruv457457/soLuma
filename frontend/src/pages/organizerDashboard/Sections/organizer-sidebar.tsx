@@ -6,9 +6,8 @@ import {
   Settings, User, X, QrCode, LogOut
 } from "lucide-react";
 import { cn } from "../../../utils/utils";
-import { useWeb3AuthDisconnect } from "@web3auth/modal/react";
+import { useWeb3AuthDisconnect, useWeb3AuthUser } from "@web3auth/modal/react"; // 👈 1. Import useWeb3AuthUser
 import { useSolanaWallet } from "@web3auth/modal/react/solana";
-import { useEffect, useState } from "react";
 import logo from "/logo.png";
 
 interface OrganizerSidebarProps {
@@ -40,38 +39,22 @@ const BrandLogo = ({ className = "" }: { className?: string }) => (
 
 export function OrganizerSidebar({ sidebarOpen, setSidebarOpen, isOrganizer }: OrganizerSidebarProps) {
   const sidebarItems = allSidebarItems.filter(item => !item.organizerOnly || isOrganizer);
-  const { accounts } = useSolanaWallet();
 
-  // --- Start of Disconnect Loading State Fix ---
-  // 1. Destructure the `loading` state and rename it to `isDisconnecting`
+  // --- Start of Integration ---
+  // 2. Use the hook to get userInfo and connection status
+  const { userInfo } = useWeb3AuthUser();
+  const { accounts } = useSolanaWallet();
   const { disconnect, loading: isDisconnecting } = useWeb3AuthDisconnect();
-  // --- End of Disconnect Loading State Fix ---
+  const isConnected = accounts && accounts.length > 0;
+
+  // 3. The old useState and useEffect for userInfo are no longer needed and have been removed.
 
   const wallet = accounts?.[0] || "";
   const formatWalletAddress = (address: string) => {
     if (!address) return "Not connected";
     return `${address.slice(0, 6)}...${address.slice(-6)}`;
   };
-
-  const [userInfo, setUserInfo] = useState<{ name?: string; email?: string }>({});
-  useEffect(() => {
-    // @ts-ignore
-    if (window && window.web3auth && window.web3auth.getUserInfo) {
-      // @ts-ignore
-      window.web3auth.getUserInfo().then((info: any) => {
-        setUserInfo({ name: info.name, email: info.email });
-      }).catch(() => {});
-    }
-  }, []);
-
-  const user = {
-    name: userInfo.name || "User",
-    email: userInfo.email || "No email",
-    address: formatWalletAddress(wallet)
-  };
-
-  const isConnected = !!wallet;
-
+  
   const handleDisconnect = async () => {
     try {
       await disconnect({ cleanup: true });
@@ -115,8 +98,6 @@ export function OrganizerSidebar({ sidebarOpen, setSidebarOpen, isOrganizer }: O
           <nav className="flex-1 px-4 py-6 space-y-2">
             {sidebarItems.map((item) => <NavItem key={item.id} item={item} />)}
             {isConnected && (
-              // --- Start of Disconnect Loading State Fix ---
-              // 2. Update the Desktop disconnect button
               <button
                 onClick={handleDisconnect}
                 disabled={isDisconnecting}
@@ -127,16 +108,28 @@ export function OrganizerSidebar({ sidebarOpen, setSidebarOpen, isOrganizer }: O
                   {isDisconnecting ? "Disconnecting..." : "Disconnect Wallet"}
                 </span>
               </button>
-              // --- End of Disconnect Loading State Fix ---
             )}
           </nav>
+          {/* 👇 4. Update the User Profile Section */}
           <div className="mt-auto px-6 py-4 border-t border-gray-800">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-pink-500 flex items-center justify-center text-white font-bold text-lg">{user.name[0]}</div>
-              <div className="flex flex-col">
-                <span className="font-bold text-white text-sm leading-tight">{user.name}</span>
-                <span className="text-gray-400 text-xs leading-tight">{user.email}</span>
-                <span className="text-cyan-400 text-xs leading-tight font-mono">{user.address ? user.address : "Not connected"}</span>
+              {userInfo?.profileImage ? (
+                <img 
+                  className="w-10 h-10 rounded-full object-cover" 
+                  src={userInfo.profileImage} 
+                  referrerPolicy="no-referrer" 
+                  alt="Profile" 
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-pink-500 flex items-center justify-center text-white font-bold text-lg">
+                  {/* Fallback to first letter of name, or 'U' for User */}
+                  {(userInfo?.name || 'U').charAt(0).toUpperCase()}
+                </div>
+              )}
+              <div className="flex flex-col overflow-hidden">
+                <span className="font-bold text-white text-sm leading-tight truncate">{userInfo?.name || "User"}</span>
+                <span className="text-gray-400 text-xs leading-tight truncate">{userInfo?.email || "No email"}</span>
+                <span className="text-cyan-400 text-xs leading-tight font-mono">{formatWalletAddress(wallet)}</span>
               </div>
             </div>
           </div>
@@ -155,8 +148,6 @@ export function OrganizerSidebar({ sidebarOpen, setSidebarOpen, isOrganizer }: O
           <nav className="flex-1 px-4 py-6 space-y-2">
             {sidebarItems.map((item) => <NavItem key={item.id} item={item} isMobile />)}
             {isConnected && (
-              // --- Start of Disconnect Loading State Fix ---
-              // 3. Update the Mobile disconnect button
               <button
                 onClick={handleDisconnect}
                 disabled={isDisconnecting}
@@ -167,16 +158,27 @@ export function OrganizerSidebar({ sidebarOpen, setSidebarOpen, isOrganizer }: O
                   {isDisconnecting ? "Disconnecting..." : "Disconnect Wallet"}
                 </span>
               </button>
-              // --- End of Disconnect Loading State Fix ---
             )}
           </nav>
+           {/* 👇 4. Update the User Profile Section for Mobile */}
           <div className="mt-auto px-6 py-4 border-t border-gray-800">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-pink-500 flex items-center justify-center text-white font-bold text-lg">{user.name[0]}</div>
-              <div className="flex flex-col">
-                <span className="font-bold text-white text-sm leading-tight">{user.name}</span>
-                <span className="text-gray-400 text-xs leading-tight">{user.email}</span>
-                <span className="text-cyan-400 text-xs leading-tight font-mono">{user.address}</span>
+             <div className="flex items-center gap-3">
+              {userInfo?.profileImage ? (
+                <img 
+                  className="w-10 h-10 rounded-full object-cover" 
+                  src={userInfo.profileImage} 
+                  referrerPolicy="no-referrer" 
+                  alt="Profile" 
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-pink-500 flex items-center justify-center text-white font-bold text-lg">
+                  {(userInfo?.name || 'U').charAt(0).toUpperCase()}
+                </div>
+              )}
+              <div className="flex flex-col overflow-hidden">
+                <span className="font-bold text-white text-sm leading-tight truncate">{userInfo?.name || "User"}</span>
+                <span className="text-gray-400 text-xs leading-tight truncate">{userInfo?.email || "No email"}</span>
+                <span className="text-cyan-400 text-xs leading-tight font-mono">{formatWalletAddress(wallet)}</span>
               </div>
             </div>
           </div>
