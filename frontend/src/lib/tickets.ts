@@ -10,7 +10,8 @@ export async function getMyTickets(ownerWallet: string): Promise<TicketDoc[]> {
     throw new Error("Wallet address is required to fetch tickets.");
   }
 
-  const response = await fetch("http://localhost:3001/api/tickets.list", {
+  const baseUrl = import.meta.env.VITE_API_BASE_URL;
+  const response = await fetch(`${baseUrl}/api/tickets.list`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ ownerWallet }),
@@ -29,7 +30,8 @@ export async function getMyTickets(ownerWallet: string): Promise<TicketDoc[]> {
  * Calls the backend API to fetch a single ticket.
  */
 export async function getTicket(ticketId: string): Promise<TicketDoc> {
-  const response = await fetch("http://localhost:3001/api/tickets.get", {
+  const baseUrl = import.meta.env.VITE_API_BASE_URL;
+  const response = await fetch(`${baseUrl}/api/tickets.get`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ ticketId }),
@@ -48,7 +50,8 @@ export async function getTicket(ticketId: string): Promise<TicketDoc> {
  * Calls the backend API to redeem a ticket.
  */
 export async function redeemTicket(ticketId: string, nonce: string): Promise<{ success: boolean; message?: string }> {
-    const response = await fetch("http://localhost:3001/api/tickets.redeem", {
+    const baseUrl = import.meta.env.VITE_API_BASE_URL;
+    const response = await fetch(`${baseUrl}/api/tickets.redeem`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ticketId, nonce }),

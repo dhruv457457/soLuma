@@ -6,7 +6,8 @@ import type { OrderDoc } from "../types/ticketing";
  * Calls the backend API to create a new order and returns the orderId.
  */
 export async function createOrder(payload: Omit<OrderDoc, 'id' | 'status' | 'createdAt' | 'txSig'>) {
-  const response = await fetch("http://localhost:3001/api/orders.create", {
+  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+  const response = await fetch(`${baseUrl}/api/orders.create`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -37,7 +38,8 @@ export async function verifyOrderAndGetTickets({
   buyerWallet: string;
   splToken?: string; // <-- NEW: Add splToken here
 }): Promise<string[]> {
-  const response = await fetch("http://localhost:3001/api/orders.verify", {
+  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+  const response = await fetch(`${baseUrl}/api/orders.verify`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
