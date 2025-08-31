@@ -1,5 +1,3 @@
-// src/pages/organizerDashboard/Sections/EventsList.tsx
-
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { listPublishedEvents } from "../../../lib/events";
@@ -259,20 +257,122 @@ export default function EventsList() {
         <div className={`fixed inset-0 z-50 transition-all duration-500 ease-out ${ showFilters ? 'opacity-100 visibility-visible' : 'opacity-0 visibility-hidden pointer-events-none' }`}>
           <div className={`absolute inset-0 bg-black/60 backdrop-blur-sm transition-all duration-500 ease-out ${ showFilters ? 'opacity-100' : 'opacity-0' }`} onClick={() => setShowFilters(false)} />
           <div className={`absolute right-0 top-0 bottom-0 w-96 bg-slate-900/95 backdrop-blur-xl border-l border-slate-700/50 shadow-2xl transform transition-all duration-500 ease-out ${ showFilters ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0' }`}>
-            <div className="h-full overflow-y-auto p-6 space-y-6">
-              <div className="flex items-center justify-between border-b border-slate-700/50 pb-4">
-                <h3 className="text-xl font-semibold text-white">Filters</h3>
-                <button onClick={() => setShowFilters(false)} className="p-2 text-slate-400 hover:text-slate-300 hover:bg-slate-800/50 rounded-lg transition-all duration-300 hover:rotate-90">
+            <div className="flex flex-col h-full">
+              {/* Header */}
+              <div className="flex items-center justify-between p-6 border-b border-slate-700/50">
+                <div className="flex items-center gap-3">
+                  <Filter className="w-5 h-5 text-cyan-400" />
+                  <h3 className="text-xl font-semibold text-white">Filters</h3>
+                  {((filters.venue !== '') || (filters.priceRange !== 'all') || (filters.currency !== 'all') || searchQuery) && (
+                    <div className="w-4 h-4 bg-cyan-500 rounded-full flex items-center justify-center">
+                      <span className="text-xs font-bold text-white">
+                        {[filters.venue !== '', filters.priceRange !== 'all', filters.currency !== 'all', searchQuery].filter(Boolean).length}
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <button onClick={() => setShowFilters(false)} className="p-2 text-slate-400 hover:text-slate-300 hover:bg-slate-800/50 rounded-lg transition-all duration-300">
                   <X className="h-5 w-5" />
                 </button>
               </div>
-              <button
-                onClick={() => { setFilters({ venue: '', priceRange: 'all', currency: 'all' }); setSearchQuery(''); }}
-                className="w-full py-3 px-4 bg-slate-800/50 hover:bg-slate-700/50 border border-slate-700/50 rounded-xl text-slate-300 hover:text-white transition-all duration-300 hover:scale-105"
-              >
-                Clear All Filters
-              </button>
-              {/* Filter sections go here */}
+
+              {/* Filter Content */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                {/* Venue Filter */}
+                <div className="space-y-3">
+                  <h4 className="text-sm font-semibold text-gray-300 uppercase tracking-wide">
+                    Venue
+                  </h4>
+                  <input
+                    type="text"
+                    placeholder="Search by venue..."
+                    value={filters.venue}
+                    onChange={(e) => setFilters({ ...filters, venue: e.target.value })}
+                    className="w-full p-3 bg-slate-800/50 border border-slate-700/50 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all duration-300"
+                  />
+                </div>
+
+                {/* Currency Filter */}
+                <div className="space-y-3">
+                  <h4 className="text-sm font-semibold text-gray-300 uppercase tracking-wide">
+                    Currency
+                  </h4>
+                  <div className="space-y-2">
+                    {[
+                      { value: "all", label: "All Currencies" },
+                      { value: "SOL", label: "SOL" },
+                      { value: "USDC", label: "USDC" },
+                    ].map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() => setFilters({ ...filters, currency: option.value })}
+                        className={`w-full flex items-center justify-between p-3 rounded-lg border transition-all duration-200 ${
+                          filters.currency === option.value
+                            ? "bg-cyan-500/10 border-cyan-500/50 text-cyan-400"
+                            : "bg-slate-800/50 border-slate-700/50 text-gray-300 hover:bg-slate-800 hover:border-slate-600"
+                        }`}
+                      >
+                        <span className="text-sm font-medium">
+                          {option.label}
+                        </span>
+                        {filters.currency === option.value && (
+                          <div className="w-4 h-4 bg-cyan-400 rounded-full"></div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Price Range Filter */}
+                <div className="space-y-3">
+                  <h4 className="text-sm font-semibold text-gray-300 uppercase tracking-wide">
+                    Price Range
+                  </h4>
+                  <div className="space-y-2">
+                    {[
+                      { value: "all", label: "All Prices" },
+                      { value: "free", label: "Free Events" },
+                      { value: "low", label: "Low Price ($0 - $50)" },
+                      { value: "medium", label: "Medium Price ($50 - $200)" },
+                      { value: "high", label: "High Price ($200+)" },
+                    ].map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() => setFilters({ ...filters, priceRange: option.value })}
+                        className={`w-full flex items-center justify-between p-3 rounded-lg border transition-all duration-200 ${
+                          filters.priceRange === option.value
+                            ? "bg-cyan-500/10 border-cyan-500/50 text-cyan-400"
+                            : "bg-slate-800/50 border-slate-700/50 text-gray-300 hover:bg-slate-800 hover:border-slate-600"
+                        }`}
+                      >
+                        <span className="text-sm font-medium">
+                          {option.label}
+                        </span>
+                        {filters.priceRange === option.value && (
+                          <div className="w-4 h-4 bg-cyan-400 rounded-full"></div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="p-6 border-t border-slate-700/50 space-y-3">
+                <button
+                  onClick={() => { setFilters({ venue: '', priceRange: 'all', currency: 'all' }); setSearchQuery(''); }}
+                  disabled={!((filters.venue !== '') || (filters.priceRange !== 'all') || (filters.currency !== 'all') || searchQuery)}
+                  className="w-full py-3 px-4 bg-slate-800 hover:bg-slate-700 disabled:bg-slate-900 disabled:text-gray-500 text-white rounded-lg transition-all duration-200 text-sm font-medium"
+                >
+                  Clear All Filters
+                </button>
+                <button
+                  onClick={() => setShowFilters(false)}
+                  className="w-full py-3 px-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white rounded-lg transition-all duration-200 text-sm font-medium"
+                >
+                  Apply Filters
+                </button>
+              </div>
             </div>
           </div>
         </div>

@@ -1,4 +1,5 @@
 import { Twitter, Facebook, Instagram } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export function Footer() {
   return (
@@ -29,18 +30,20 @@ export function Footer() {
             <div className="flex flex-col sm:flex-row gap-4 items-start">
               <div className="relative inline-flex items-center justify-center group">
                 <div className="absolute transition-all duration-300 rounded-full -inset-px bg-gradient-to-r from-cyan-500 to-purple-500 group-hover:from-cyan-400 group-hover:to-purple-400"></div>
-                <a
-                  href="/org/events"
+                <Link
+                  to="/dashboard/events/new"
                   className="relative inline-flex items-center justify-center px-8 py-3 text-base font-medium text-white bg-black border border-transparent rounded-full hover:scale-105 transform transition-all duration-200"
                   role="button"
                 >
                   Start Your Event Today
-                </a>
+                </Link>
               </div>
               
-              <button className="px-6 py-3 text-base font-medium text-gray-300 border border-gray-600 rounded-full hover:border-cyan-400 hover:text-cyan-400 transition-all duration-200 hover:shadow-lg hover:shadow-cyan-400/20">
+              <Link 
+              to="/docs"
+              className="px-6 py-3 text-base font-medium text-gray-300 border border-gray-600 rounded-full hover:border-cyan-400 hover:text-cyan-400 transition-all duration-200 hover:shadow-lg hover:shadow-cyan-400/20">
                 Learn More
-              </button>
+              </Link>
             </div>
           </div>
 

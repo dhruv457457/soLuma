@@ -1,4 +1,5 @@
 import { Calendar, MapPin, Users, ExternalLink } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export function EventsShowcase() {
   const events = [
@@ -137,14 +138,14 @@ export function EventsShowcase() {
         <div className="text-center mt-16">
           <div className="relative inline-flex items-center justify-center group">
             <div className="absolute transition-all duration-200 rounded-full -inset-px bg-gradient-to-r from-cyan-500 to-purple-500"></div>
-            <a
-              href="/events"
+            <Link
+              to="/dashboard/explore"
               className="relative inline-flex items-center justify-center px-8 py-3 text-base font-normal text-white bg-black border border-transparent rounded-full"
               role="button"
             >
               Explore All Events
               <ExternalLink className="w-4 h-4 ml-2" />
-            </a>
+            </Link>
           </div>
         </div>
       </div>
