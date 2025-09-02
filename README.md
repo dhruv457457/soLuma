@@ -1,157 +1,167 @@
 # 🌐 Soluma: The Web3 Event Platform
 
-> Soluma is a decentralized event management platform built on the Solana blockchain that redefines how events are organized, ticketed, and experienced. It's a Web3 alternative to platforms like Luma, providing a secure, transparent, and user-friendly solution for both organizers and attendees.
+A decentralized event platform that combines a seamless Web2 user experience with the power of the Solana blockchain. No seed phrases, no complexity—just events.
 
-[🔴 Live Demo](https://example.com) | [📄 Pitch Deck](https://example.com)
+**Follow our Hackathon Journey for the #SocialMediaPrize! 🐦**
+**[https://x.com/SoLuma_X](https://x.com/SoLuma_X)**
 
----
-
-## The Problem
-
-Current event ticketing systems are centralized and lack transparency. Organizers face high platform fees, and attendees have no true ownership of their tickets. The traditional model is prone to ticket fraud, limited access to secondary markets, and a reliance on intermediaries who control funds and data. Web3 event solutions, while decentralized, often have a steep learning curve, alienating mainstream users with complex wallet setups and seed phrase management.
+| [🔴 Live Demo](https://soluma.vercel.app/) | [📄 Pitch Deck](https://example.com) | [📂 GitHub Repo](https://github.com/Dhruv-2003/Soluma) |
+|---|---|---|
 
 ---
 
-## The Solution: A Hybrid Web2 + Web3 Approach
+## ✨ Hackathon Submission: MetaMask Embedded Wallets & Solana Dev Cook-Off
 
-Soluma bridges this gap by combining the speed and security of the Solana blockchain with a familiar, intuitive user interface. It provides the best of both worlds: a trustless, decentralized backbone that's hidden behind a seamless Web2-like experience.
+This project is a submission for the **MetaMask Embedded Wallets & Solana Dev Cook-Off**. Soluma is built from the ground up to reimagine Web3 UX by making decentralized technology invisible to the end-user, perfectly aligning with the hackathon's theme.
 
-**For Organizers:** Soluma offers a low-cost, transparent platform to create events, manage tickets, and verify attendance with absolute confidence.
+### 🏆 Targeted Prize Tracks
 
-**For Attendees:** It provides a simple way to purchase tickets using crypto, securely store them in a self-custodial wallet they don't even know they have, and gain entry with a simple QR scan. The "source of truth" is the public Solana ledger, not a private database.
+We are primarily competing for the following tracks where Soluma excels:
 
----
+* **🥇 Solana Everyday Impact: Consumer & Community App**
+    * **Why?** Soluma is a practical consumer application that makes a common activity—event ticketing—more democratic, secure, and user-empowering on Solana. It's designed for mainstream adoption.
 
-## 🔑 Core Features
+* **🥇 Best Use of Solana Pay**
+    * **Why?** Solana Pay is the core of our payment and ticketing mechanism. We use it not just for payments but as the foundation for generating verifiable, on-chain tickets via QR codes.
 
-| Feature                       | Description                                                                                                                                                             |
-| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Frictionless Onboarding** | Users sign up with their social accounts or email using **Web3Auth**, which instantly creates a non-custodial wallet for them. No more complicated key management.         |
-| **Decentralized Payments** | Attendees pay for tickets using the **Solana Pay** protocol. This enables instant, low-fee transactions with SOL or any SPL token, directly from their wallet to the organizer's. |
-| **On-Chain Ticket Verification** | Tickets are unique QR codes linked to an on-chain record. An **Express.js** backend securely verifies each scan by checking the blockchain for valid transactions, preventing double-use and fraud. |
-| **Real-Time Organizer Dashboard** | Organizers get a live view of ticket sales, payment statuses, and attendee check-ins, all powered by real-time data from **Firebase Firestore** and the blockchain. |
-| **Secure Wallet Management** | Users can easily access their Web3Auth-generated wallet from a personal dashboard, viewing balances and transaction history without needing a separate app or browser extension. |
-| **Simplified Management** | All ticket and event metadata is efficiently stored on **Firebase**, while the critical payment and ownership data resides immutably on the **Solana** blockchain.        |
+We are also strong contenders for:
 
-[Export to Sheets](https://example.com)
+* **🥈 Programmable Commerce & DeFi for Everyone**
+    * **Why?** Soluma simplifies commerce by allowing organizers to receive direct, peer-to-peer payments without intermediaries, using both SOL and SPL tokens (USDC).
 
----
-
-## ⚙️ How It Works: The Technical Flow
-
-Soluma uses a hybrid architecture that ensures a flawless user experience while leveraging the benefits of a decentralized backend.
-
-### Flow 1: Event Creation & Ticket Purchase
-
-This flow shows how an organizer's input is transformed into a scannable, on-chain ticket.
-
-1.  **Organizer Action (React):** An organizer logs in via Web3Auth and fills out the event details (title, price, etc.) on the React frontend.
-2.  **Metadata Storage (Firebase):** The event details are saved to Firebase Firestore for easy retrieval.
-3.  **Payment URL Generation (Express.js):** The backend generates a unique Solana Pay URL that includes the organizer's wallet address and the event's token amount.
-4.  **QR Code Generation (Frontend):** The React frontend renders this URL as a scannable QR code. The event page is now ready for attendees.
-
-### Flow 2: QR Code Scanning & Entry
-
-This flow demonstrates the trustless verification process that happens in real time.
-
-1.  **Attendee Action:** An attendee purchases a ticket by scanning the Solana Pay QR code and approving the transaction.
-2.  **On-Chain Confirmation (Solana):** The payment is confirmed on the Solana blockchain.
-3.  **Verification (Backend):** At the event, a staff member scans the attendee's ticket QR code. This triggers a call to the Express.js backend.
-4.  **Secure Verification:** The backend cross-references the scanned QR data with the Firebase database and the Solana blockchain to confirm:
-    - The transaction is valid.
-    - The ticket has not already been used.
-5.  **Access Granted:** Upon successful verification, the attendee is granted entry, and the ticket's status is updated to "used" in Firebase to prevent fraud.
+* **🥈 Best Social Media Presence**
+    * **Why?** We are actively documenting and sharing our progress. Follow us [@SoLuma_X](https://x.com/SoLuma_X)!
 
 ---
 
-## 🛠️ Tech Stack
+## 🎯 The Problem
 
--   **Frontend:** React, TypeScript, Tailwind CSS
--   **Backend:** Node.js, Express.js
--   **Blockchain:** Solana (`@solana/web3.js`, `@solana/spl-token`, `@solana/pay`)
--   **Authentication:** Web3Auth (`@web3auth/modal`)
--   **Database:** Firebase (Firestore, Storage)
--   **Storage:** Cloudinary (for image uploads)
--   **Routing:** `react-router-dom`
+Event ticketing is centralized, expensive for organizers, and insecure for attendees. Traditional platforms control user data, charge high fees, and suffer from fraud. Existing Web3 solutions are often too complex for everyday users, requiring browser extensions and seed phrase management.
+
+## ✅ Our Solution: Soluma
+
+Soluma solves this by offering a hybrid Web2 + Web3 platform. We use **MetaMask Embedded Wallets (via the Web3Auth SDK)** to provide a frictionless, "seedless" onboarding experience. Users sign up with an email or social account and get a non-custodial Solana wallet without even knowing it.
+
+-   **For Organizers:** Create events and receive payments directly to your wallet in seconds with near-zero fees.
+-   **For Attendees:** Buy tickets with a simple QR scan using **Solana Pay**. Your ticket is a secure, on-chain asset you truly own.
 
 ---
 
-## 🚀 Getting Started & Running the Demo
+## 📋 How We Meet the Hackathon Requirements
 
-To get a local copy up and running, follow these simple steps.
+| Requirement | How Soluma Meets It |
+| :--- | :--- |
+| **MetaMask Embedded Wallet SDK** | ✅ **Integrated.** We use the `@web3auth/modal` React SDK for instant, seedless wallet creation via social/email logins. Users never see a seed phrase. |
+| **Deployed on Solana** | ✅ **Deployed.** The entire ticketing and payment logic is built on the Solana Devnet, leveraging its speed and low transaction costs. |
+| **Working Demo** | ✅ **Available.** A live demo is linked above, showcasing the full user flow from event creation to ticket verification. |
+| **Source Code Access** | ✅ **Public.** The complete source code is available in this repository with clear setup instructions. |
+| **Pitch & Documentation** | ✅ **Included.** This README serves as our documentation and pitch, outlining the problem, solution, and technical execution. |
+
+---
+
+## 🛠️ Technical Architecture & Key Features
+
+Soluma's hybrid architecture uses Firebase for non-critical metadata and the **Solana blockchain as the single source of truth** for payments and ticket ownership.
+
+### User Flow
+1.  **Onboarding (Web3Auth):** A user signs up with their email. Web3Auth instantly generates a non-custodial Solana wallet in the background.
+2.  **Event Creation (React/Firebase):** An organizer creates an event. The details are stored in Firestore.
+3.  **Payment URL (Node.js/Solana Pay):** Our backend generates a unique Solana Pay URL for the ticket price, pointing to the organizer's wallet.
+4.  **Purchase (Solana Pay):** An attendee scans the QR code and approves the transaction from any Solana wallet.
+5.  **Verification (Node.js/Solana):** At the venue, an organizer scans the attendee's QR ticket. Our backend verifies the transaction signature on the Solana blockchain in real-time to grant entry. This prevents fraud and double-spending.
+
+### Code Highlights
+
+#### 1. Frictionless Onboarding with Web3Auth
+We configured the Web3Auth modal to create a Solana-native wallet and hide all complex/irrelevant options, ensuring a pure Web2-like experience.
+
+```typescript
+// src/config/web3auth.ts
+import { CHAIN_NAMESPACES, WEB3AUTH_NETWORK } from "@web3auth/base";
+
+export const web3AuthContextConfig = {
+  web3AuthOptions: {
+    clientId: VITE_WEB3AUTH_CLIENT_ID,
+    chainConfig: {
+      chainNamespace: CHAIN_NAMESPACES.SOLANA,
+      chainId: "0x3", // Solana Devnet
+      rpcTarget: "[https://api.devnet.solana.com](https://api.devnet.solana.com)",
+    },
+    web3AuthNetwork: WEB3AUTH_NETWORK.SAPPHIRE_DEVNET,
+  },
+  // Hide all external wallet options to create a seamless embedded experience
+  modalConfig: {
+    openlogin: { label: "email", showOnModal: true },
+    metamask: { showOnModal: false },
+    phantom: { showOnModal: false },
+    // ... other wallets hidden
+  },
+};
+
+```
+#### 2. Dynamic Solana Pay URL Generation
+We create transaction requests on the fly, embedding event and payment details directly into the QR code. This is central to our "Best Use of Solana Pay" claim.
+
+```typescript
+// src/lib/solanapay.ts (simplified)
+import { encodeURL } from "@solana/pay";
+import { PublicKey } from "@solana/web3.js";
+import BigNumber from "bignumber.js";
+
+function makePayURL({ recipient, amount, reference, splToken }) {
+  const recipientPk = new PublicKey(recipient);
+  const refPk = new PublicKey(reference); // Reference links the payment to the order
+  const tokenPk = splToken ? new PublicKey(splToken) : undefined;
+  
+  const url = encodeURL({
+    recipient: recipientPk,
+    amount: new BigNumber(amount),
+    splToken: tokenPk,
+    reference: refPk,
+    label: "Soluma Event Ticket",
+  });
+  return url;
+}
+```
+---
+
+## 🚀 Getting Started
 
 ### Prerequisites
-
--   Node.js & npm installed
--   A Solana wallet with SOL and SPL tokens for testing
+-   Node.js & npm
 -   A Firebase project with Firestore enabled
--   A Web3Auth project to get your Client ID
+-   A Web3Auth project Client ID
 -   A Cloudinary account for image hosting
 
 ### Installation & Setup
 
 1.  **Clone the repository:**
     ```bash
-    git clone [https://github.com/your_username/soluma.git](https://github.com/your_username/soluma.git)
+    git clone [https://github.com/Dhruv-2003/Soluma.git](https://github.com/Dhruv-2003/Soluma.git)
     cd soluma
     ```
 2.  **Install frontend dependencies:**
     ```bash
     npm install
     ```
-3.  **Navigate to the backend directory and install dependencies:**
+3.  **Install backend dependencies:**
     ```bash
     cd backend
     npm install
     ```
 4.  **Set up environment variables:**
+    -   Create a `.env` file in the frontend root and populate it with your keys (Firebase, Web3Auth, etc.).
+    -   Create a `.env` file in the backend root and populate it.
 
-    Create a `.env` file in your frontend root and add the following:
-    ```
-    VITE_WEB3AUTH_CLIENT_ID=...
-    VITE_RPC=...
-    VITE_CLUSTER=...
-    VITE_FIREBASE_API_KEY=...
-    VITE_FIREBASE_AUTH_DOMAIN=...
-    VITE_FIREBASE_PROJECT_ID=...
-    VITE_FIREBASE_STORAGE_BUCKET=...
-    VITE_FIREBASE_MESSAGING_SENDER_ID=...
-    VITE_FIREBASE_APP_ID=...
-    VITE_CLOUD_NAME=...
-    VITE_API_BASE_URL=...
-    ```
-    Create a `.env` file in your backend root and add the following:
-    ```
-    FIREBASE_SERVICE_ACCOUNT_KEY=...
-    ALLOWED_ORIGINS=...
-    CLOUDINARY_API_KEY=...
-    CLOUDINARY_API_SECRET=...
-    ```
 5.  **Run the development servers:**
     -   In the frontend directory: `npm run dev`
     -   In the backend directory: `node server.js`
 
 ---
 
-## 🤝 Contributing
-
-Contributions are what make the open-source community an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
-
-1.  Fork the Project
-2.  Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3.  Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4.  Push to the Branch (`git push origin feature/AmazingFeature`)
-5.  Open a Pull Request
-
----
-
-## 📜 License
-
-Distributed under the MIT License. See `LICENSE` for more information.
-
----
-
 ## 🧑‍💻 The Team
+* **Dhruv Pancholi** ([dpancholi.pp123@gmail.com](mailto:dpancholi.pp123@gmail.com))
+* **Nitin Jain**
 
--   Your Name
--   Collaborator's Name
+---
+
