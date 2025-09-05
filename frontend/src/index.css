@@ -3,3 +3,17 @@
 html, body {
   @apply bg-black text-white;
 }
+/* Force white calendar/clock icons on dark inputs */
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
+  filter: invert(1); /* flips black icon to white */
+  cursor: pointer;
+}
+
+/* Helps Firefox show light UI for pickers */
+input[type="date"],
+input[type="datetime-local"],
+input[type="time"] {
+  color-scheme: dark;
+}

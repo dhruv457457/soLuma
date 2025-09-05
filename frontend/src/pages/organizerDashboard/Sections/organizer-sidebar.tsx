@@ -2,8 +2,9 @@
 
 import { NavLink } from "react-router-dom";
 import {
-  LayoutDashboard, PlusCircle, Calendar, Ticket, Wallet,
-  Settings, User, X, QrCode, LogOut
+  LayoutDashboard, PlusCircle, Calendar, Ticket,
+  Settings, User, X, QrCode, LogOut,
+  ImagePlusIcon
 } from "lucide-react";
 import { cn } from "../../../utils/utils";
 import { useWeb3AuthDisconnect, useWeb3AuthUser } from "@web3auth/modal/react"; // 👈 1. Import useWeb3AuthUser
@@ -21,7 +22,7 @@ const allSidebarItems = [
     { id: "profile", label: "Profile", icon: User, to: "/dashboard/profile", organizerOnly: false },
     { id: "my-tickets", label: "My Tickets", icon: Ticket, to: "/dashboard/tickets", organizerOnly: false },
     { id: "explore", label: "Explore Events", icon: Calendar, to: "/dashboard/explore", organizerOnly: false },
-    { id: "my-events", label: "My Events", icon: Calendar, to: "/dashboard/events", organizerOnly: true },
+    { id: "my-events", label: "My Events", icon: ImagePlusIcon, to: "/dashboard/events", organizerOnly: true },
     { id: "create-event", label: "Create Event", icon: PlusCircle, to: "/dashboard/events/new", organizerOnly: false },
     { id: "scanner", label: "Scanner", icon: QrCode, to: "/dashboard/scanner", organizerOnly: true },
     { id: "settings", label: "Settings", icon: Settings, to: "/dashboard/settings", organizerOnly: true },

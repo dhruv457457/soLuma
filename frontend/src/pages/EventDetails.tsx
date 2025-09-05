@@ -64,7 +64,7 @@ export default function EventDetails() {
         <div className="flex items-center gap-4 mb-8">
           <Button
             variant="outline"
-            className="bg-gray-900/70 border-gray-700 text-white hover:bg-gray-800 hover:text-cyan-400 px-4 py-2 rounded-lg cursor-pointer"
+            className="bg-gray-900/70 border-gray-700 text-white hover:bg-gray-800 hover:text-cyan-400 px-4 py-2 rounded-lg cursor-pointer hidden lg:block"
             onClick={() => navigate(-1)}
           >
             &#8592; Back
