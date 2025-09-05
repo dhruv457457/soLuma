@@ -5,7 +5,7 @@ A decentralized event platform that combines a seamless Web2 user experience wit
 **Follow our Hackathon Journey for the #SocialMediaPrize! 🐦**
 **[https://x.com/SoLuma_X](https://x.com/SoLuma_X)**
 
-| [🔴 Live Demo](https://soluma.vercel.app/) | [📄 Pitch Deck](https://example.com) | [📂 GitHub Repo](https://github.com/Dhruv-2003/Soluma) |
+| [🔴 Live Demo](https://soluma.vercel.app/) | [📄 Pitch Deck]([https://example.com](https://gamma.app/docs/Soluma-The-Web3-Event-Platform-l0onzh91an2dum7?mode=doc)) | [📂 GitHub Repo](https://github.com/dhruv457457/soLuma) |
 |---|---|---|
 
 ---
@@ -23,14 +23,6 @@ We are primarily competing for the following tracks where Soluma excels:
 
 * **🥇 Best Use of Solana Pay**
     * **Why?** Solana Pay is the core of our payment and ticketing mechanism. We use it not just for payments but as the foundation for generating verifiable, on-chain tickets via QR codes.
-
-We are also strong contenders for:
-
-* **🥈 Programmable Commerce & DeFi for Everyone**
-    * **Why?** Soluma simplifies commerce by allowing organizers to receive direct, peer-to-peer payments without intermediaries, using both SOL and SPL tokens (USDC).
-
-* **🥈 Best Social Media Presence**
-    * **Why?** We are actively documenting and sharing our progress. Follow us [@SoLuma_X](https://x.com/SoLuma_X)!
 
 ---
 
