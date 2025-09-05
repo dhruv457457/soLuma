@@ -5,7 +5,7 @@ A decentralized event platform that combines a seamless Web2 user experience wit
 **Follow our Hackathon Journey for the #SocialMediaPrize! 🐦**
 **[https://x.com/SoLuma_X](https://x.com/SoLuma_X)**
 
-| [🔴 Live Demo](https://soluma.vercel.app/) | [📄 Pitch Deck]([https://example.com](https://gamma.app/docs/Soluma-The-Web3-Event-Platform-l0onzh91an2dum7?mode=doc)) | [📂 GitHub Repo](https://github.com/dhruv457457/soLuma) |
+| [🔴 Live Demo](https://soluma.vercel.app/) | [📄 Pitch Deck](https://gamma.app/docs/Soluma-The-Web3-Event-Platform-l0onzh91an2dum7?mode=doc) | [📂 GitHub Repo](https://github.com/dhruv457457/soLuma) |
 |---|---|---|
 
 ---
