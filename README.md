@@ -144,7 +144,29 @@ function makePayURL({ recipient, amount, reference, splToken }) {
 4.  **Set up environment variables:**
     -   Create a `.env` file in the frontend root and populate it with your keys (Firebase, Web3Auth, etc.).
     -   Create a `.env` file in the backend root and populate it.
+  frontend env
+```bash
+VITE_WEB3AUTH_CLIENT_ID="<YOUR_WEB3AUTH_CLIENT_ID>"
+VITE_RPC="<YOUR_ALCHEMY_RPC_URL>"
 
+VITE_FIREBASE_API_KEY="<YOUR_FIREBASE_API_KEY>"
+VITE_FIREBASE_AUTH_DOMAIN="<YOUR_FIREBASE_AUTH_DOMAIN>"
+VITE_FIREBASE_PROJECT_ID="<YOUR_FIREBASE_PROJECT_ID>"
+VITE_FIREBASE_STORAGE_BUCKET="<YOUR_FIREBASE_STORAGE_BUCKET>"
+VITE_FIREBASE_MESSAGING_SENDER_ID="<YOUR_FIREBASE_MESSAGING_SENDER_ID>"
+VITE_FIREBASE_APP_ID="<YOUR_FIREBASE_APP_ID>"
+
+VITE_CLUSTER="<YOUR_SOLANA_CLUSTER>"
+VITE_CLOUD_NAME="<YOUR_CLOUDINARY_CLOUD_NAME>"
+VITE_API_BASE_URL="<YOUR_BACKEND_API_BASE_URL>"
+CLOUDINARY_API_KEY="<YOUR_CLOUDINARY_API_KEY>"
+CLOUDINARY_API_SECRET="<YOUR_CLOUDINARY_API_SECRET>"
+```
+Backend env
+```bash
+ALLOWED_ORIGINS="<YOUR_FRONTEND_URL>"
+FIREBASE_SERVICE_ACCOUNT_KEY='<YOUR_FIREBASE_SERVICE_ACCOUNT_KEY_JSON>'
+```
 5.  **Run the development servers:**
     -   In the frontend directory: `npm run dev`
     -   In the backend directory: `node server.js`
